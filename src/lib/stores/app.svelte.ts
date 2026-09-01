@@ -5,9 +5,9 @@ import { clonePacket } from "$lib/features/runtime";
 
 import { toast } from "./toast.svelte";
 
-export type Screen = "home" | "whiteboard";
+export type Screen = "schedule" | "teams" | "team" | "picklist" | "whiteboard";
 
-let screen = $state<Screen>("home");
+let screen = $state<Screen>("schedule");
 let packets = $state<MatchPacket[]>([]);
 let activeMatchId = $state<string | null>(null);
 let loading = $state(true);
@@ -96,6 +96,9 @@ async function createMatch(inputOrName: CreateMatchInput | string, red?: readonl
  */
 export const app = {
   get screen(): Screen { return screen; },
+  /** Direct navigation between the hub screens. `whiteboard` and `team` are entered
+   * through `openMatch*` / a team selection, not this setter. */
+  set screen(next: Screen) { screen = next; },
   get matches(): StrategyMatch[] { return packets.map(project); },
   get activeMatch(): StrategyMatch | null {
     const packet = activeMatchId === null ? undefined : packets.find((item) => item[7] === activeMatchId);
@@ -149,7 +152,33 @@ export const app = {
 
   closeMatch(): void {
     activeMatchId = null;
-    screen = "home";
+    screen = "schedule";
+  },
+
+  /** Open the whiteboard for a TBA match, creating its packet on first use. */
+  async openMatchByTbaKey(
+    tbaMatchKey: string,
+    red: readonly string[],
+    blue: readonly string[],
+    matchName: string,
+    tbaEventKey: string,
+    tbaYear?: number,
+  ): Promise<string> {
+    const existing = packets.find((packet) => packet[10] === tbaMatchKey);
+    if (existing) {
+      this.openMatch(existing[7]);
+      return existing[7];
+    }
+    const id = await createMatch({
+      matchName,
+      redTeams: [red[0] ?? "", red[1] ?? "", red[2] ?? ""],
+      blueTeams: [blue[0] ?? "", blue[1] ?? "", blue[2] ?? ""],
+      tbaEventKey,
+      tbaMatchKey,
+      ...(tbaYear ? { tbaYear } : {}),
+    });
+    this.openMatch(id);
+    return id;
   },
 
   createMatch,
