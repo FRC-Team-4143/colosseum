@@ -70,12 +70,8 @@ export const native = {
     redo: () => call<string | null>("board_redo"),
   },
   tba: {
-    setApiKey: (apiKey: string) => call<void>("tba_set_api_key", { apiKey }),
-    hasApiKey: () => call<boolean>("tba_has_api_key"),
     events: (year: number) => call<TbaEvent[]>("tba_events", { year }),
     matchesAtEvent: (eventKey: string) => call<TbaMatch[]>("tba_matches_at_event", { eventKey }),
-    teamMatches: (teamKey: string, eventKey: string) => call<TbaMatch[]>("tba_team_matches", { teamKey, eventKey }),
-    teamEvents: (teamKey: string, year: number) => call<TbaEvent[]>("tba_team_events", { teamKey, year }),
     teamsAtEvent: (eventKey: string) => call<string[]>("tba_teams_at_event", { eventKey }),
     simpleEvents: (events: TbaEvent[]) => call<TbaSimpleEvent[]>("tba_simple_events", { events }),
     simpleMatches: (matches: TbaMatch[]) => call<TbaSimpleMatch[]>("tba_simple_matches", { matches }),

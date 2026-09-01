@@ -89,7 +89,7 @@ describe("tba pure transforms", () => {
   });
 });
 
-describe("tba fetch commands", () => {
+describe("tba fetch commands (proxied through /api/tba)", () => {
   const fetchMock = vi.fn();
   beforeEach(() => {
     fetchMock.mockReset();
@@ -97,42 +97,35 @@ describe("tba fetch commands", () => {
   });
   afterEach(() => vi.unstubAllGlobals());
 
-  const ok = (data: unknown) => ({ ok: true, json: async () => data });
+  const ok = (data: unknown) => ({ ok: true, status: 200, json: async () => data });
 
-  it("hits the events endpoint with the auth header", async () => {
+  it("calls the backend events endpoint", async () => {
     fetchMock.mockResolvedValue(ok([{ key: "2026miket" }]));
     const result = await tbaCommands.tba_events({ year: 2026 });
     expect(result).toEqual([{ key: "2026miket" }]);
-    const [url, init] = fetchMock.mock.calls[0];
-    expect(url).toBe("https://www.thebluealliance.com/api/v3/events/2026");
-    expect((init.headers as Record<string, string>)["X-TBA-Auth-Key"]).toMatch(/^\w{40,}$/);
+    expect(fetchMock.mock.calls[0][0]).toBe("/api/tba/events?year=2026");
   });
 
-  it("normalizes the team key for team endpoints", async () => {
+  it("calls the backend matches endpoint", async () => {
     fetchMock.mockResolvedValue(ok([]));
-    await tbaCommands.tba_team_matches({ teamKey: "254", eventKey: "2026miket" });
-    expect(fetchMock.mock.calls[0][0]).toBe(
-      "https://www.thebluealliance.com/api/v3/team/frc254/event/2026miket/matches",
+    await tbaCommands.tba_matches_at_event({ eventKey: "2026miket" });
+    expect(fetchMock.mock.calls[0][0]).toBe("/api/tba/event/2026miket/matches");
+  });
+
+  it("maps the backend team list to sorted bare team numbers", async () => {
+    fetchMock.mockResolvedValue(
+      ok([
+        { key: "frc254", team_number: 254, nickname: "The Cheesy Poofs" },
+        { key: "frc9", team_number: 9, nickname: "Iron Reign" },
+      ]),
     );
-  });
-
-  it("teams_at_event falls back to /matches and returns bare team numbers", async () => {
-    fetchMock
-      .mockResolvedValueOnce({ ok: false, status: 404, statusText: "Not Found" })
-      .mockResolvedValueOnce(ok([match("m1", "qm", 1, 1)]));
     const teams = await tbaCommands.tba_teams_at_event({ eventKey: "2026miket" });
-    expect(teams).toEqual(["1", "2"]);
-    expect(fetchMock.mock.calls[1][0]).toContain("/event/2026miket/matches");
+    expect(teams).toEqual(["9", "254"]);
+    expect(fetchMock.mock.calls[0][0]).toBe("/api/tba/event/2026miket/teams");
   });
 
-  it("surfaces a non-2xx response as a TBA API error", async () => {
-    fetchMock.mockResolvedValue({ ok: false, status: 401, statusText: "Unauthorized" });
-    await expect(tbaCommands.tba_events({ year: 2026 })).rejects.toBe("TBA API error: 401 Unauthorized");
-  });
-
-  it("tba_has_api_key is always true; tba_set_api_key is a no-op", async () => {
-    expect(await tbaCommands.tba_has_api_key({})).toBe(true);
-    expect(await tbaCommands.tba_set_api_key({ apiKey: "whatever" })).toBeNull();
-    expect(fetchMock).not.toHaveBeenCalled();
+  it("surfaces a backend error", async () => {
+    fetchMock.mockResolvedValue({ ok: false, status: 502, statusText: "Bad Gateway", json: async () => ({ detail: "TBA request failed" }) });
+    await expect(tbaCommands.tba_events({ year: 2026 })).rejects.toThrow(/TBA request failed/);
   });
 });

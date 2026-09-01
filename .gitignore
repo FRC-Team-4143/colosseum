@@ -7,6 +7,21 @@ node_modules/
 /package/
 .vite/
 
+# Python backend (server/)
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+*.db
+*.db-shm
+*.db-wal
+/server/data/
+/server/backups/
+# The built SPA is copied here for local "backend serves the bundle" testing and by
+# the Docker build; never committed.
+/server/static/
+
 # Environment / secrets
 .env
 .env.*

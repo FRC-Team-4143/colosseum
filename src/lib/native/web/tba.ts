@@ -1,18 +1,11 @@
+import { apiGet } from "$lib/api/http";
 import type { WebCommandHandler } from "./index";
 
 /**
- * Browser port of the `tba_*` commands (commands.rs) + helpers/tba.rs.
- *
- * The desktop build reads its TBA key from an env var or in-app setting; the
- * web build has it baked in below (a read-only key for The Blue Alliance's
- * public read API — bundling it client-side just shares its rate limit).
- * `tba_set_api_key` is therefore a no-op and `tba_has_api_key` is always true.
- *
- * The Blue Alliance's v3 API sends permissive CORS headers, so these run as
- * plain `fetch` from the page with no proxy.
+ * Browser side of the `tba_*` commands. The fetching commands now go through Colosseum's
+ * own backend (`/api/tba/*`), which holds the TBA key and caches responses; only the
+ * pure display transforms (`tba_simple_events`, `tba_simple_matches`) still run here.
  */
-const TBA_API_BASE = "https://www.thebluealliance.com/api/v3";
-const TBA_API_KEY = "FV6ylEIqaxtoYPrnBfPTd4HntyhyFOfk82YTjpz1rB9LhvXFKaRiSlP8XS7dFVBH";
 
 interface TbaAlliance {
   team_keys: string[];
@@ -50,23 +43,6 @@ interface TbaSimpleMatch {
   match_key: string;
 }
 
-async function tbaJson<T>(endpoint: string): Promise<T> {
-  let response: Response;
-  try {
-    response = await fetch(`${TBA_API_BASE}${endpoint}`, {
-      headers: { "X-TBA-Auth-Key": TBA_API_KEY },
-    });
-  } catch (error) {
-    throw `TBA request failed: ${(error as Error).message}`;
-  }
-  if (!response.ok) throw `TBA API error: ${response.status} ${response.statusText}`;
-  try {
-    return (await response.json()) as T;
-  } catch (error) {
-    throw `TBA API JSON error: ${(error as Error).message}`;
-  }
-}
-
 export const stripFrc = (key: string): string => (key.startsWith("frc") ? key.slice(3) : key);
 export const normalizeTeamKey = (key: string): string => (key.startsWith("frc") ? key : `frc${key}`);
 
@@ -80,7 +56,7 @@ export function teamsFromMatches(matches: TbaMatch[]): string[] {
   return seen;
 }
 
-// --- simple-event transforms (helpers/tba.rs) ------------------------------
+// --- simple-event transforms ------------------------------------------------
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
 export function formatLocation(event: TbaEvent): string {
@@ -174,28 +150,24 @@ export function parseMatchesToSimple(matches: TbaMatch[]): TbaSimpleMatch[] {
     }));
 }
 
+// --- commands ---------------------------------------------------------------
+interface TbaSimpleTeam {
+  key: string;
+  team_number: number;
+  nickname: string | null;
+}
+
 export const tbaCommands: Record<string, WebCommandHandler> = {
-  tba_has_api_key: () => true,
-  tba_set_api_key: () => null,
-
-  tba_events: (args) => tbaJson<TbaEvent[]>(`/events/${Number(args.year)}`),
-  tba_matches_at_event: (args) => tbaJson<TbaMatch[]>(`/event/${String(args.eventKey)}/matches`),
-  tba_team_matches: (args) =>
-    tbaJson<TbaMatch[]>(
-      `/team/${normalizeTeamKey(String(args.teamKey))}/event/${String(args.eventKey)}/matches`,
-    ),
-  tba_team_events: (args) =>
-    tbaJson<TbaEvent[]>(`/team/${normalizeTeamKey(String(args.teamKey))}/events/${Number(args.year)}`),
-
+  tba_events: (args) => apiGet<TbaEvent[]>(`/api/tba/events?year=${Number(args.year)}`),
+  tba_matches_at_event: (args) =>
+    apiGet<TbaMatch[]>(`/api/tba/event/${encodeURIComponent(String(args.eventKey))}/matches`),
   tba_teams_at_event: async (args) => {
-    const eventKey = String(args.eventKey);
-    let keys: string[];
-    try {
-      keys = await tbaJson<string[]>(`/event/${eventKey}/teams/keys`);
-    } catch {
-      keys = teamsFromMatches(await tbaJson<TbaMatch[]>(`/event/${eventKey}/matches`));
-    }
-    return keys.map(stripFrc);
+    const teams = await apiGet<TbaSimpleTeam[]>(
+      `/api/tba/event/${encodeURIComponent(String(args.eventKey))}/teams`,
+    );
+    return teams
+      .map((team) => String(team.team_number))
+      .sort((a, b) => Number(a) - Number(b));
   },
 
   tba_simple_events: (args) => filterAndSortEvents(parseEventsToSimple((args.events as TbaEvent[]) ?? [])),
