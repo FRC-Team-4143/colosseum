@@ -2,7 +2,7 @@
   import { loadContributorTeams } from "$lib/features";
   import type { Match } from "./types";
 
-  let { matches, onOpen, onEdit, onDuplicate, onExportPng, onExportQr, onShare, onDelete }: { matches: Match[]; onOpen: (match: Match) => void; onEdit: (match: Match) => void; onDuplicate: (match: Match) => void; onExportPng: (match: Match) => void; onExportQr: (match: Match) => void; onShare: (match: Match) => void; onDelete: (match: Match) => void } = $props();
+  let { matches, onOpen, onEdit, onDuplicate, onExportPng, onExportQr, onDelete }: { matches: Match[]; onOpen: (match: Match) => void; onEdit: (match: Match) => void; onDuplicate: (match: Match) => void; onExportPng: (match: Match) => void; onExportQr: (match: Match) => void; onDelete: (match: Match) => void } = $props();
 
   const GOLD_TEAM = "834";
   let openId = $state<string | null>(null);
@@ -90,10 +90,6 @@
             <button class="px-5 py-2.5 text-base btn-secondary" onclick={() => run(onDuplicate, match)}>Duplicate</button>
             <button class="px-5 py-2.5 text-base btn-secondary whitespace-nowrap" onclick={() => run(onExportPng, match)}>Export PNG</button>
             <button class="px-5 py-2.5 text-base btn-secondary whitespace-nowrap" onclick={() => run(onExportQr, match)}>Export QR</button>
-            <button class="px-5 py-2.5 text-base btn-secondary whitespace-nowrap flex items-center gap-2" onclick={() => run(onShare, match)}>
-              <span>Share</span>
-              <i class="fas fa-link text-lg"></i>
-            </button>
             <button class="px-5 py-2.5 text-base btn-danger" onclick={() => run(onDelete, match)}>Delete</button>
           </div>
         {/if}

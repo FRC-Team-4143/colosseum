@@ -3,7 +3,7 @@
 use serde::{Deserialize, Serialize};
 
 pub const CONTRIBUTORS_URL: &str =
-    "https://api.github.com/repos/pranavgundu/Strategy-Board/contributors?per_page=100";
+    "https://api.github.com/repos/FRC-Team-4143/colosseum/contributors?per_page=100";
 pub const GITHUB_USERS_BASE: &str = "https://api.github.com/users";
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]

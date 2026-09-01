@@ -3,19 +3,17 @@
   import "../app.css";
   import { app } from "$lib/stores/app.svelte";
   import { native } from "$lib/native/api";
-  import { buildCommit, dismissRelease, isNativeRuntime, isReleaseDismissed, loadTeamNumber, parseShareCode, removeShareCodeFromUrl, saveTeamNumber, timeAgo } from "$lib/features";
+  import { buildCommit, dismissRelease, isNativeRuntime, isReleaseDismissed, loadTeamNumber, saveTeamNumber, timeAgo } from "$lib/features";
   import AppLoading from "$lib/components/AppLoading.svelte";
   import ConfirmModal from "$lib/components/ConfirmModal.svelte";
   import ContributorsModal from "$lib/components/ContributorsModal.svelte";
   import HomeToolbar from "$lib/components/HomeToolbar.svelte";
-  import LinkImportModal from "$lib/components/LinkImportModal.svelte";
   import MatchEditorModal from "$lib/components/MatchEditorModal.svelte";
   import MatchList from "$lib/components/MatchList.svelte";
   import OrientationWarning from "$lib/components/OrientationWarning.svelte";
   import QrExportModal from "$lib/components/QrExportModal.svelte";
   import QrImportModal from "$lib/components/QrImportModal.svelte";
   import ReleaseAnnouncementModal from "$lib/components/ReleaseAnnouncementModal.svelte";
-  import ShareModal from "$lib/components/ShareModal.svelte";
   import TbaImportModal from "$lib/components/TbaImportModal.svelte";
   import TeamNumberModal from "$lib/components/TeamNumberModal.svelte";
   import WhiteboardScreen from "$lib/components/WhiteboardScreen.svelte";
@@ -25,14 +23,12 @@
   let createOpen = $state(false);
   let clearOpen = $state(false);
   let tbaOpen = $state(false);
-  let linkOpen = $state(false);
   let qrImportOpen = $state(false);
   let contributorsOpen = $state(false);
   let releaseOpen = $state(false);
   let teamOpen = $state(false);
   let editing = $state<Match | null>(null);
   let qrMatch = $state<Match | null>(null);
-  let shareLink = $state("");
   let toast = $state("");
   let pngRequest = $state(0);
   let releaseAnnouncement = $state<ReleaseAnnouncement | null>(null);
@@ -66,8 +62,6 @@
       if (announcement?.enabled && !(await isReleaseDismissed(announcement.id, announcement.showOnce))) {
         if (active) { releaseAnnouncement = announcement; releaseOpen = true; }
       }
-      const code = parseShareCode();
-      if (code && active && await importLink(code)) removeShareCodeFromUrl();
     })().catch(() => notice("Some startup services could not be loaded."));
     return () => { active = false; window.removeEventListener("click", openExternal); };
   });
@@ -101,25 +95,6 @@
     }
   }
 
-  async function importLink(code: string): Promise<boolean> {
-    const shareCode = parseShareCode(code) ?? code.trim().split(/[/?#]/).filter(Boolean).at(-1) ?? "";
-    if (!shareCode) { notice("Enter a valid Strategy Board share link or code."); return false; }
-    try {
-      const packet = await native.cloud.download(shareCode);
-      if (!packet) {
-        notice("That share link has expired or could not be found.");
-        return false;
-      }
-      await app.importPackets([packet]);
-      linkOpen = false;
-      notice("Imported 1 match.");
-      return true;
-    } catch {
-      notice("Could not import that share link.");
-      return false;
-    }
-  }
-
   async function importTba(eventKey: string, teamNumber: string) {
     try {
       const rawMatches = await native.tba.matchesAtEvent(eventKey);
@@ -147,17 +122,6 @@
     }
   }
 
-  async function share(match: Match) {
-    const source = app.matches.find((candidate) => candidate.id === match.id);
-    if (!source) return;
-    try {
-      const code = await native.cloud.upload(source.packet);
-      shareLink = `https://strategyboard.app/?share=${encodeURIComponent(code)}`;
-    } catch {
-      notice("Could not create a share link.");
-    }
-  }
-
   async function importQr(packet: MatchPacket) {
     await app.importPackets([packet]);
   }
@@ -174,15 +138,15 @@
   }
 </script>
 
-<svelte:head><title>Strategy Board</title><meta name="description" content="The Digital Strategy Whiteboard for FRC" /></svelte:head>
+<svelte:head><title>Colosseum</title><meta name="description" content="Digital strategy whiteboard for FRC Team 4143 (MARS/WARS)" /></svelte:head>
 
 {#if app.loading}<AppLoading />{/if}
 <OrientationWarning />
 
 {#if app.screen === "home"}
   <div id="home-container" class="flex flex-col w-full h-full touch-none">
-    <HomeToolbar onNew={() => createOpen = true} onTba={() => tbaOpen = true} onImportQr={() => qrImportOpen = true} onImportLink={() => linkOpen = true} onClear={() => clearOpen = true} />
-    <MatchList {matches} onOpen={(match) => app.openMatch(match.id)} onEdit={(match) => editing = match} onDuplicate={(match) => app.duplicateMatch(match.id)} onExportPng={(match) => { app.openMatch(match.id); pngRequest += 1; }} onExportQr={(match) => qrMatch = match} onShare={share} onDelete={(match) => app.deleteMatch(match.id)} />
+    <HomeToolbar onNew={() => createOpen = true} onTba={() => tbaOpen = true} onImportQr={() => qrImportOpen = true} onClear={() => clearOpen = true} />
+    <MatchList {matches} onOpen={(match) => app.openMatch(match.id)} onEdit={(match) => editing = match} onDuplicate={(match) => app.duplicateMatch(match.id)} onExportPng={(match) => { app.openMatch(match.id); pngRequest += 1; }} onExportQr={(match) => qrMatch = match} onDelete={(match) => app.deleteMatch(match.id)} />
     <div
       id="home-bottom-bar"
       class="w-full bg-[#0d0d0d] flex items-center justify-center border-t border-[#1a1a1a] relative"
@@ -190,20 +154,13 @@
     >
       <div class="flex items-center justify-center gap-4">
         <a
-          href="https://github.com/pranavgundu/Strategy-Board"
+          href="https://github.com/FRC-Team-4143/colosseum"
           target="_blank"
           rel="noopener noreferrer"
           class="flex items-center justify-center text-[#999] hover:text-[#ccc] transition-colors"
           aria-label="GitHub"
         >
           <i class="fab fa-github text-2xl leading-none"></i>
-        </a>
-        <a
-          href="mailto:pranav@strategyboard.app"
-          class="flex items-center justify-center text-[#999] hover:text-[#ccc] transition-colors"
-          aria-label="Contact"
-        >
-          <i class="fas fa-envelope text-2xl leading-none"></i>
         </a>
         <a
           href="/privacy"
@@ -231,7 +188,7 @@
         style="top: 50%; transform: translateY(-50%);"
         onclick={() => contributorsOpen = true}
       >
-        strategyboard.app
+        Team 4143
       </button>
     </div>
   </div>
@@ -242,10 +199,8 @@
 <MatchEditorModal open={editing !== null} match={editing} onSave={save} onClose={() => editing = null} />
 <ConfirmModal open={clearOpen} title="Clear All Data?" message="This will permanently delete all matches and data. This action cannot be undone." confirmLabel="Clear All" destructive onConfirm={async () => { await app.clearAll(); clearOpen = false; }} onClose={() => clearOpen = false} />
 <TbaImportModal open={tbaOpen} onImport={importTba} onClose={() => tbaOpen = false} />
-<LinkImportModal open={linkOpen} onClose={() => linkOpen = false} onImport={importLink} />
 <QrImportModal open={qrImportOpen} onImport={importQr} onNotice={notice} onClose={() => qrImportOpen = false} />
 <QrExportModal open={qrMatch !== null} packet={qrMatch ? app.matches.find((match) => match.id === qrMatch?.id)?.packet ?? null : null} matchName={qrMatch?.matchName || "this match"} onNotice={notice} onClose={() => qrMatch = null} />
-<ShareModal open={Boolean(shareLink)} {shareLink} onNotice={notice} onClose={() => shareLink = ""} />
 <ContributorsModal open={contributorsOpen} onClose={() => contributorsOpen = false} />
 <ReleaseAnnouncementModal open={releaseOpen} announcement={releaseAnnouncement} onDismiss={dismissAnnouncement} onClose={() => releaseOpen = false} />
 <TeamNumberModal open={teamOpen} onSave={saveTeam} />

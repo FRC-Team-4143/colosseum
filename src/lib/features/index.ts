@@ -6,5 +6,4 @@ export * from "./preferences";
 export * from "./qr";
 export * from "./runtime";
 export * from "./sharing";
-export * from "./share-link";
 export * from "./pdf";

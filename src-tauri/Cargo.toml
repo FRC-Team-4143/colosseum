@@ -1,8 +1,8 @@
 [package]
-name = "strategy-board"
+name = "colosseum"
 version = "2026.6.0"
-description = "The Digital Strategy Whiteboard for FRC"
-authors = ["Pranav Gundu"]
+description = "Digital strategy whiteboard for FRC Team 4143 (MARS/WARS)"
+authors = ["MARS/WARS Robotics (FRC Team 4143)", "Pranav Gundu"]
 license = "MIT"
 edition = "2021"
 
@@ -12,7 +12,7 @@ edition = "2021"
 # The `_lib` suffix may seem redundant but it is necessary
 # to make the lib name unique and wouldn't conflict with the bin name.
 # This seems to be only an issue on Windows, see https://github.com/rust-lang/cargo/issues/8519
-name = "strategy_board_lib"
+name = "colosseum_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
 [build-dependencies]
@@ -25,7 +25,6 @@ serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls", "blocking"] }
 atomicwrites = "0.4"
-getrandom = "0.4"
 tauri-plugin-dialog = "2"
 tauri-plugin-fs = "2"
 tauri-plugin-clipboard-manager = "2"

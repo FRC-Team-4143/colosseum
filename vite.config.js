@@ -7,7 +7,7 @@ const host = process.env.TAURI_DEV_HOST;
 
 /** Build-time commit stamp shown in the footer. */
 function getGitCommitInfo() {
-  const REPO_URL = "https://github.com/pranavgundu/Strategy-Board";
+  const REPO_URL = "https://github.com/FRC-Team-4143/colosseum";
   try {
     /** @param {string} cmd */
     const git = (cmd) => execSync(`git ${cmd}`, { encoding: "utf-8" }).trim();

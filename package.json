@@ -1,11 +1,10 @@
 {
-  "name": "strategy-board",
+  "name": "colosseum",
   "version": "2026.6.0",
-  "description": "The Digital Strategy Whiteboard for FRC",
-  "homepage": "https://github.com/pranavgundu/Strategy-Board",
+  "description": "Digital strategy whiteboard for FRC Team 4143 (MARS/WARS)",
+  "homepage": "https://github.com/FRC-Team-4143/colosseum",
   "author": {
-    "name": "Pranav Gundu",
-    "email": "pranav@strategyboard.app"
+    "name": "MARS/WARS Robotics (FRC Team 4143)"
   },
   "packageManager": "bun@1.3.14",
   "type": "module",
@@ -21,7 +20,7 @@
     "mobile:build": "bun tauri android build && bun run ios:build",
     "ios:init": "PATH=\"$PWD/scripts/swift-shim:$PATH\" bun tauri ios init && bun run ios:patch",
     "ios:build": "PATH=\"$PWD/scripts/swift-shim:$PATH\" bun tauri ios build",
-    "ios:patch": "sed -i '' 's/IPHONEOS_DEPLOYMENT_TARGET = 14.0;/IPHONEOS_DEPLOYMENT_TARGET = 15.0;/g' src-tauri/gen/apple/strategy-board.xcodeproj/project.pbxproj",
+    "ios:patch": "sed -i '' 's/IPHONEOS_DEPLOYMENT_TARGET = 14.0;/IPHONEOS_DEPLOYMENT_TARGET = 15.0;/g' src-tauri/gen/apple/colosseum.xcodeproj/project.pbxproj",
     "tauri": "tauri"
   },
   "license": "MIT",

@@ -189,7 +189,7 @@ impl Match {
         })
     }
 
-    /// Serializes exactly to the existing browser/Firestore packet schema.
+    /// Serializes exactly to the existing browser/export packet schema.
     pub fn get_as_packet(&self) -> Value {
         let dims = &[
             &self.auto.red_one_robot,
@@ -340,7 +340,7 @@ fn phase_packet(p: &PhaseData) -> Value {
 
 // This is the old Rust codec's implementation of JavaScript `toFixed`-style
 // rounding, including its negative-tie behaviour. Keeping it avoids packet
-// drift for existing Firestore/QR exports.
+// drift for existing QR/PDF exports.
 fn js_to_fixed(x: f64, digits: usize) -> f64 {
     if !x.is_finite() || x == 0.0 || x.abs() >= 1e15 {
         return x;

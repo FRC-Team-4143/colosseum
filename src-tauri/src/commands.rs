@@ -12,10 +12,10 @@ use tauri_plugin_opener::OpenerExt;
 
 use crate::helpers::storage::KeyValueStore;
 use crate::{
-    adapters::{FirestoreAdapter, GithubAdapter, HttpAdapter, JsonFileStore},
+    adapters::{GithubAdapter, HttpAdapter, JsonFileStore},
     helpers::{
-        board, cloud, config, contributors, manager, match_model, pdf, platform, qr, search,
-        statbotics, storage, tba,
+        board, config, contributors, manager, match_model, pdf, platform, qr, search, statbotics,
+        storage, tba,
     },
 };
 
@@ -27,7 +27,6 @@ pub struct RuntimeState {
     pub qr_import: Mutex<qr::QrImportState>,
     pub tba_key: Mutex<Option<String>>,
     pub http: HttpAdapter,
-    pub firestore: FirestoreAdapter,
     pub github: GithubAdapter,
     pub teams: Mutex<Option<Vec<String>>>,
     pub contributors: Mutex<Option<Vec<contributors::Contributor>>>,
@@ -39,7 +38,7 @@ impl RuntimeState {
             .path()
             .app_data_dir()
             .map_err(|error| error.to_string())?;
-        let storage = JsonFileStore::open(directory.join("strategy-board.json"))
+        let storage = JsonFileStore::open(directory.join("colosseum.json"))
             .map_err(|error| error.to_string())?;
         let tba_key = storage
             .get("tbaApiKey")
@@ -52,7 +51,6 @@ impl RuntimeState {
             board: Mutex::new(board::Board::default()),
             qr_import: Mutex::new(qr::QrImportState::default()),
             tba_key: Mutex::new(tba_key),
-            firestore: FirestoreAdapter::from_env(http.clone()),
             github: GithubAdapter::new(http.clone()),
             http,
             teams: Mutex::new(None),
@@ -369,61 +367,6 @@ pub async fn github_contributors(
         .collect())
 }
 
-fn next_share_code() -> CommandResult<String> {
-    let mut random = [0_u8; cloud::SHARE_CODE_LENGTH];
-    getrandom::fill(&mut random)
-        .map_err(|error| format!("secure random share-code generation failed: {error}"))?;
-    Ok(cloud::generate_share_code(
-        random.into_iter().map(usize::from),
-    ))
-}
-#[tauri::command]
-pub async fn cloud_upload(
-    state: State<'_, RuntimeState>,
-    packet: Vec<Value>,
-) -> CommandResult<String> {
-    let record = cloud::create_share_record(&packet, now_ms())?;
-    let mut last_error = String::new();
-    for _ in 0..cloud::MAX_UPLOAD_ATTEMPTS {
-        let code = next_share_code()?;
-        match state.firestore.set_match(&code, record.clone()).await {
-            Ok(()) => return Ok(code),
-            Err(error) if error == "permission-denied" => last_error = error,
-            Err(error) => return Err(error),
-        }
-    }
-    Err(format!(
-        "Failed to allocate a unique share code after {} attempts: {last_error}",
-        cloud::MAX_UPLOAD_ATTEMPTS
-    ))
-}
-#[tauri::command]
-pub async fn cloud_download(
-    state: State<'_, RuntimeState>,
-    share_code: String,
-) -> CommandResult<Option<Vec<Value>>> {
-    let code = cloud::normalize_share_code(&share_code)?;
-    let Some(record) = state.firestore.get_match(&code).await? else {
-        return Ok(None);
-    };
-    if now_ms() > record.expires_at {
-        return Err("This share code has expired".into());
-    }
-    serde_json::from_str(&record.data)
-        .map(Some)
-        .map_err(|error| error.to_string())
-}
-#[tauri::command]
-pub async fn cloud_share_exists(
-    state: State<'_, RuntimeState>,
-    share_code: String,
-) -> CommandResult<bool> {
-    let Ok(code) = cloud::normalize_share_code(&share_code) else {
-        return Ok(false);
-    };
-    Ok(state.firestore.get_match(&code).await?.is_some())
-}
-
 #[tauri::command]
 pub fn qr_encode(payload: String) -> CommandResult<Vec<String>> {
     qr::encode_frames(&payload).map_err(|error| error.to_string())
@@ -728,18 +671,12 @@ mod tests {
 
     fn temporary_store(name: &str) -> JsonFileStore {
         JsonFileStore::open(std::env::temp_dir().join(format!(
-            "strategy-board-command-{name}-{}.json",
+            "colosseum-command-{name}-{}.json",
             std::process::id()
         )))
         .unwrap()
     }
 
-    #[test]
-    fn generated_share_codes_fit_the_public_format() {
-        let code = next_share_code().unwrap();
-        assert_eq!(code.len(), cloud::SHARE_CODE_LENGTH);
-        assert!(code.chars().all(|c| cloud::SHARE_CODE_ALPHABET.contains(c)));
-    }
     #[test]
     fn packet_command_rejects_short_alliances() {
         assert!(match_create_packet("Q1".into(), vec![], vec![], None, None, None).is_err());

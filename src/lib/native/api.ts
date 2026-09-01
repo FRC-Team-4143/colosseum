@@ -89,11 +89,6 @@ export const native = {
     teams: () => call<string[]>("github_teams"),
     contributors: (count?: number) => call<Contributor[]>("github_contributors", { count }),
   },
-  cloud: {
-    upload: (packet: MatchPacket) => call<string>("cloud_upload", { packet }),
-    download: (shareCode: string) => call<MatchPacket | null>("cloud_download", { shareCode }),
-    shareExists: (shareCode: string) => call<boolean>("cloud_share_exists", { shareCode }),
-  },
   qr: {
     encode: (payload: string) => call<string[]>("qr_encode", { payload }),
     reset: () => call<void>("qr_reset"),

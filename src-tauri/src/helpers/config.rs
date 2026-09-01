@@ -67,7 +67,7 @@ impl Config {
                 title: "New update available",
                 message: "We shipped a new release with fixes and improvements.",
                 cta_label: "View release notes",
-                cta_url: "https://github.com/pranavgundu/Strategy-Board/releases",
+                cta_url: "https://github.com/FRC-Team-4143/colosseum/releases",
                 show_once: true,
             },
         }

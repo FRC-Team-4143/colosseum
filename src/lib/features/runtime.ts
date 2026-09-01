@@ -5,7 +5,7 @@ export function isNativeRuntime(): boolean {
   return typeof window !== "undefined" && isTauri();
 }
 
-export function safeFilename(value: string, fallback = "strategy-board"): string {
+export function safeFilename(value: string, fallback = "colosseum"): string {
   const cleaned = value
     .trim()
     .replace(/[\\/:*?"<>|\u0000-\u001f]/g, "-")
