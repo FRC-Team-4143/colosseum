@@ -5,6 +5,7 @@
   import { session } from "$lib/stores/identity.svelte";
   import { eventStore } from "$lib/stores/event.svelte";
   import { pickList } from "$lib/stores/picklist.svelte";
+  import { scouting } from "$lib/stores/scouting.svelte";
   import { native } from "$lib/native/api";
   import { clonePacket, dismissRelease, isReleaseDismissed } from "$lib/features";
   import AppLoading from "$lib/components/AppLoading.svelte";
@@ -17,6 +18,7 @@
   import QrExportModal from "$lib/components/QrExportModal.svelte";
   import ReleaseAnnouncementModal from "$lib/components/ReleaseAnnouncementModal.svelte";
   import ScheduleView from "$lib/components/ScheduleView.svelte";
+  import ScoutForm from "$lib/components/ScoutForm.svelte";
   import TeamDetail from "$lib/components/TeamDetail.svelte";
   import TeamsTable from "$lib/components/TeamsTable.svelte";
   import WhiteboardScreen from "$lib/components/WhiteboardScreen.svelte";
@@ -43,6 +45,13 @@
   }
   const matches = $derived(app.matches.map(asMatch));
   const eventName = $derived((eventStore.event.data?.name as string | undefined) ?? null);
+
+  // Keep the shared pick-list and scouting stores pointed at the workspace's event.
+  $effect(() => {
+    if (!session.identity) return;
+    void pickList.load(eventStore.currentEventKey);
+    void scouting.load(eventStore.currentEventKey);
+  });
 
   onMount(() => {
     let active = true;
@@ -188,6 +197,13 @@
           />
         {:else if app.screen === "picklist"}
           <PickList onNotice={notice} />
+        {:else if app.screen === "scout" && app.scoutMatchKey}
+          <ScoutForm
+            matchKey={app.scoutMatchKey}
+            team={app.scoutTeam}
+            onNotice={notice}
+            onBack={() => (app.screen = "schedule")}
+          />
         {/if}
       </div>
     </div>

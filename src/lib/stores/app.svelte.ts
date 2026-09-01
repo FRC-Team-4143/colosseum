@@ -5,12 +5,14 @@ import { clonePacket } from "$lib/features/runtime";
 
 import { toast } from "./toast.svelte";
 
-export type Screen = "schedule" | "teams" | "team" | "picklist" | "whiteboard";
+export type Screen = "schedule" | "teams" | "team" | "picklist" | "scout" | "whiteboard";
 
 let screen = $state<Screen>("schedule");
 let packets = $state<MatchPacket[]>([]);
 let activeMatchId = $state<string | null>(null);
 let selectedTeam = $state<number | null>(null);
+let scoutMatchKey = $state<string | null>(null);
+let scoutTeam = $state<number | null>(null);
 let loading = $state(true);
 let saving = $state(false);
 let initialized = false;
@@ -106,6 +108,13 @@ export const app = {
     selectedTeam = team;
     screen = "team";
   },
+
+  /** Open the scouting form for a match, optionally pre-selecting a team slot. */
+  openScout(matchKey: string, team: number | null = null): void {
+    scoutMatchKey = matchKey;
+    scoutTeam = team;
+    screen = "scout";
+  },
   get matches(): StrategyMatch[] { return packets.map(project); },
   get activeMatch(): StrategyMatch | null {
     const packet = activeMatchId === null ? undefined : packets.find((item) => item[7] === activeMatchId);
@@ -113,6 +122,8 @@ export const app = {
   },
   get activeMatchId(): string | null { return activeMatchId; },
   get selectedTeam(): number | null { return selectedTeam; },
+  get scoutMatchKey(): string | null { return scoutMatchKey; },
+  get scoutTeam(): number | null { return scoutTeam; },
   get loading(): boolean { return loading; },
   get saving(): boolean { return saving; },
 

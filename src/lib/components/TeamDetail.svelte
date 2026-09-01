@@ -1,9 +1,11 @@
 <script lang="ts">
   import { app } from "$lib/stores/app.svelte";
   import { eventStore } from "$lib/stores/event.svelte";
+  import { scouting } from "$lib/stores/scouting.svelte";
   import { buildTeamStats } from "$lib/features/tba-stats";
   import { toScheduleRows } from "$lib/features/schedule";
   import { getTeamNote, putTeamNote } from "$lib/api/notes";
+  import { NUMERIC_FIELDS, TOGGLE_FIELDS } from "$lib/scouting/schema";
 
   let { team, onNotice, onBack, onAddToPicklist }: {
     team: number;
@@ -61,6 +63,7 @@
   }
 
   const fixed = (value: number | null | undefined) => (value === null || value === undefined ? "—" : value.toFixed(1));
+  const agg = $derived(scouting.teamAggregate(team));
 </script>
 
 <div id="team-detail">
@@ -91,6 +94,22 @@
     {/if}
   </section>
 
+  <section class="scouting">
+    <h2>Scouting <small>{agg.matchCount} match{agg.matchCount === 1 ? "" : "es"} recorded · shared</small></h2>
+    {#if agg.matchCount === 0}
+      <p class="td-note">No scouting records yet — use the Scout button on a match below.</p>
+    {:else}
+      <div class="cards">
+        {#each NUMERIC_FIELDS as field (field.key)}
+          <div class="card"><span>{field.label} avg</span><strong>{fixed(agg.averages[field.key])}</strong></div>
+        {/each}
+        {#each TOGGLE_FIELDS as field (field.key)}
+          <div class="card"><span>{field.label}</span><strong>{agg.toggles[field.key]}/{agg.matchCount}</strong></div>
+        {/each}
+      </div>
+    {/if}
+  </section>
+
   <section class="notes">
     <h2>Notes <small>shared across 4143 &amp; 4423 at this event</small></h2>
     <textarea
@@ -118,7 +137,10 @@
               {#if match.completed}<span class="m-score">{match.redScore}–{match.blueScore}</span>{:else}<span class="m-vs">vs</span>{/if}
               <span class="blue">{match.blue.join(" ")}</span>
             </span>
-            <button class="btn-secondary" onclick={() => openBoard(match)}>Whiteboard</button>
+            <span class="m-actions">
+              <button class="btn-secondary" onclick={() => app.openScout(match.key, team)}>Scout</button>
+              <button class="btn-secondary" onclick={() => openBoard(match)}>Whiteboard</button>
+            </span>
           </li>
         {/each}
       </ul>
@@ -156,9 +178,12 @@
   .notes button { margin-top: 0.5rem; padding: 0.4rem 0.9rem; }
   .td-matches ul { display: flex; flex-direction: column; gap: 0.35rem; }
   .td-matches li {
-    display: grid; grid-template-columns: 6rem 1fr 7rem; align-items: center; gap: 0.75rem;
+    display: grid; grid-template-columns: 6rem 1fr auto; align-items: center; gap: 0.75rem;
     padding: 0.5rem 0.8rem; background: #111111; border: 1px solid #2a1a1a; border-radius: 8px;
   }
+  .m-actions { display: flex; gap: 0.4rem; }
+  .m-actions button { padding: 0.3rem 0.55rem; font-size: 0.85rem; }
+  .scouting { margin-bottom: 1.5rem; }
   .m-name { font-weight: 600; color: #f0e8e8; }
   .m-teams { display: flex; gap: 0.6rem; align-items: baseline; overflow: hidden; }
   .m-teams .red { color: #c97070; }

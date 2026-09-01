@@ -68,7 +68,10 @@
             <span class="row-alliance blue">
               {#each row.blue as team, i}{#if i > 0}{" "}{/if}<span class:ours={isOurs(team)}>{team}</span>{/each}
             </span>
-            <button class="btn-secondary row-board" onclick={() => openBoard(row)}>Whiteboard</button>
+            <span class="row-actions">
+              <button class="btn-secondary" onclick={() => app.openScout(row.key)}>Scout</button>
+              <button class="btn-secondary" onclick={() => openBoard(row)}>Whiteboard</button>
+            </span>
           </li>
         {/each}
       </ul>
@@ -94,7 +97,7 @@
   .schedule-list { display: flex; flex-direction: column; gap: 0.4rem; margin-top: 1rem; }
   .schedule-row {
     display: grid;
-    grid-template-columns: 6rem 1fr 4.5rem 1fr 7rem;
+    grid-template-columns: 6rem 1fr 4.5rem 1fr auto;
     align-items: center;
     gap: 0.75rem;
     padding: 0.6rem 0.9rem;
@@ -103,6 +106,8 @@
     border-radius: 8px;
   }
   .schedule-row.done { opacity: 0.85; }
+  .row-actions { display: flex; gap: 0.4rem; }
+  .row-actions :global(button) { padding: 0.35rem 0.6rem; font-size: 0.85rem; }
   .row-name { font-weight: 600; color: #f0e8e8; }
   .row-alliance { font-size: 1rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .row-alliance.red { text-align: right; color: #c97070; }
@@ -111,9 +116,8 @@
   .row-score { text-align: center; color: #f0e8e8; font-variant-numeric: tabular-nums; }
   .row-score .vs { color: #9a7878; }
   .row-score .win { font-weight: 800; }
-  .row-board { padding: 0.35rem 0.5rem; font-size: 0.85rem; }
   @media (max-width: 720px) {
     .schedule-row { grid-template-columns: 1fr auto; grid-auto-rows: auto; }
-    .row-board { grid-column: 2; grid-row: 1 / span 3; }
+    .row-actions { grid-column: 2; grid-row: 1 / span 3; flex-direction: column; }
   }
 </style>
