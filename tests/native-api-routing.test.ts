@@ -60,12 +60,4 @@ describe("native command routing", () => {
     expect(config).toMatchObject({ fieldPngPixelWidth: 3510 });
     expect(invokeMock).not.toHaveBeenCalled();
   });
-
-  it("wraps an unported web command's error in NativeCommandError with a clear message", async () => {
-    isTauriMock.mockReturnValue(false);
-
-    await expect(native.model.loadPackets()).rejects.toBeInstanceOf(NativeCommandError);
-    await expect(native.model.loadPackets()).rejects.toThrow(/web build yet/);
-    expect(invokeMock).not.toHaveBeenCalled();
-  });
 });

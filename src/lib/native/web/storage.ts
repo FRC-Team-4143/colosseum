@@ -50,9 +50,13 @@ function tx<T>(mode: IDBTransactionMode, run: (store: IDBObjectStore) => IDBRequ
   );
 }
 
-async function get(key: string): Promise<unknown> {
+/** Low-level accessors, shared with the model port (./model.ts). */
+export async function storageGet(key: string): Promise<unknown> {
   const value = await tx<unknown>("readonly", (store) => store.get(key));
   return value === undefined ? null : value;
+}
+export async function storageSet(key: string, value: unknown): Promise<void> {
+  await tx("readwrite", (store) => store.put(value, key));
 }
 
 async function entries(): Promise<Array<[string, unknown]>> {
@@ -75,14 +79,13 @@ async function entries(): Promise<Array<[string, unknown]>> {
 }
 
 export const storageCommands: Record<string, WebCommandHandler> = {
-  storage_get: (args) => get(String(args.key)),
+  storage_get: (args) => storageGet(String(args.key)),
   storage_get_many: (args) => {
     const keys = Array.isArray(args.keys) ? (args.keys as unknown[]).map(String) : [];
-    return Promise.all(keys.map(get));
+    return Promise.all(keys.map(storageGet));
   },
   storage_set: async (args) => {
-    const key = String(args.key);
-    await tx("readwrite", (store) => store.put(args.value, key));
+    await storageSet(String(args.key), args.value);
     return null;
   },
   storage_delete: async (args) => {

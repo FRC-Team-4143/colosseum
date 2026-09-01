@@ -3,6 +3,7 @@ import type { InvokeArgs } from "@tauri-apps/api/core";
 import { boardCommands } from "./board";
 import { configCommands } from "./config";
 import { fieldCommands } from "./field";
+import { modelCommands } from "./model";
 import { platformCommands } from "./platform";
 import { storageCommands } from "./storage";
 
@@ -13,8 +14,9 @@ import { storageCommands } from "./storage";
  * This module is only imported when `isTauri()` is false (see `../api.ts`), so
  * it is code-split out of the desktop bundle entirely. Ported so far:
  *   - Phase 1: config, field, platform, storage, board
+ *   - Phase 2: model_*, match_* (packet codec)
  * Still pending (throw until ported):
- *   - Phase 2: model, matches, qr, pdf, fuzzy search
+ *   - Phase 2: qr, pdf, fuzzy search
  *   - Phase 3: tba, statbotics, github
  */
 export type WebCommandHandler = (args: Record<string, unknown>) => unknown | Promise<unknown>;
@@ -26,6 +28,7 @@ export const webCommands: Record<string, WebCommandHandler> = {
   ...platformCommands,
   ...storageCommands,
   ...boardCommands,
+  ...modelCommands,
 };
 
 function toArgRecord(args: InvokeArgs | undefined): Record<string, unknown> {

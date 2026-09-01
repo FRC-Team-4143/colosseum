@@ -34,8 +34,13 @@ export function selectFieldYear(year: unknown): 2025 | 2026 {
   return 2025;
 }
 
+/** Mirrors `manager::robot_positions_for_year` — the default robot start poses. */
+export function robotPositionsForYear(year: unknown): (typeof POSITIONS)[2025 | 2026] {
+  return POSITIONS[selectFieldYear(year)];
+}
+
 export const fieldCommands: Record<string, WebCommandHandler> = {
   field_years: () => [...YEARS],
   field_image: (args) => IMAGE[selectFieldYear(args.year)],
-  field_robot_positions: (args) => POSITIONS[selectFieldYear(args.year)],
+  field_robot_positions: (args) => robotPositionsForYear(args.year),
 };
