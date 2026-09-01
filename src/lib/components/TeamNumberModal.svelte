@@ -2,14 +2,17 @@
   import Modal from "./Modal.svelte";
 
   let { open, onSave }: { open: boolean; onSave: (teamNumber: string) => Promise<void> | void } = $props();
-  let teamNumber = $state("");
+  // `bind:value` on `<input type="number">` yields `number | null`, so coerce
+  // before any string handling.
+  let teamNumber = $state<string | number | null>("");
   let saving = $state(false);
 
   async function save() {
-    if (!teamNumber.trim() || saving) return;
+    const value = String(teamNumber ?? "").trim();
+    if (!value || saving) return;
     saving = true;
     try {
-      await onSave(teamNumber);
+      await onSave(value);
     } finally {
       saving = false;
     }
