@@ -5,7 +5,7 @@
   "identifier": "org.marswars.colosseum",
   "build": {
     "beforeDevCommand": "bun run dev",
-    "devUrl": "http://localhost:1420",
+    "devUrl": "http://localhost:8005",
     "beforeBuildCommand": "bun run build",
     "frontendDist": "../build"
   },

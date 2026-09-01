@@ -37,16 +37,17 @@ export default defineConfig(async () => ({
   //
   // 1. prevent Vite from obscuring rust errors
   clearScreen: false,
-  // 2. tauri expects a fixed port, fail if that port is not available
+  // 2. tauri expects a fixed port, fail if that port is not available.
+  //    8005 is Colosseum's slot in the MARS/WARS apps port range (8000-8006).
   server: {
-    port: 1420,
+    port: 8005,
     strictPort: true,
     host: host || false,
     hmr: host
       ? {
           protocol: "ws",
           host,
-          port: 1421,
+          port: 8006,
         }
       : undefined,
     watch: {
