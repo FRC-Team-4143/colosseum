@@ -1,0 +1,54 @@
+{
+  "name": "strategy-board",
+  "version": "2026.6.0",
+  "description": "The Digital Strategy Whiteboard for FRC",
+  "homepage": "https://github.com/pranavgundu/Strategy-Board",
+  "author": {
+    "name": "Pranav Gundu",
+    "email": "pranav@strategyboard.app"
+  },
+  "packageManager": "bun@1.3.14",
+  "type": "module",
+  "scripts": {
+    "dev": "vite dev",
+    "build": "vite build",
+    "preview": "vite preview",
+    "check": "svelte-kit sync && svelte-check --tsgo --tsconfig ./tsconfig.json",
+    "check:watch": "svelte-kit sync && svelte-check --tsgo --tsconfig ./tsconfig.json --watch",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "mobile:init": "bun tauri android init && bun run ios:init",
+    "mobile:build": "bun tauri android build && bun run ios:build",
+    "ios:init": "PATH=\"$PWD/scripts/swift-shim:$PATH\" bun tauri ios init && bun run ios:patch",
+    "ios:build": "PATH=\"$PWD/scripts/swift-shim:$PATH\" bun tauri ios build",
+    "ios:patch": "sed -i '' 's/IPHONEOS_DEPLOYMENT_TARGET = 14.0;/IPHONEOS_DEPLOYMENT_TARGET = 15.0;/g' src-tauri/gen/apple/strategy-board.xcodeproj/project.pbxproj",
+    "tauri": "tauri"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "@tauri-apps/api": "^2.11.1",
+    "@tauri-apps/plugin-clipboard-manager": "^2.3.2",
+    "@tauri-apps/plugin-dialog": "^2.7.2",
+    "@tauri-apps/plugin-fs": "^2.5.1",
+    "@tauri-apps/plugin-opener": "^2.5.4",
+    "pdf-lib": "^1.17.1",
+    "qr-scanner": "^1.4.2",
+    "qrcode": "^1.5.4"
+  },
+  "devDependencies": {
+    "@sveltejs/adapter-static": "^3.0.10",
+    "@sveltejs/kit": "^2.70.3",
+    "@sveltejs/vite-plugin-svelte": "^7.3.0",
+    "@tailwindcss/vite": "^4",
+    "@tauri-apps/cli": "^2.11.4",
+    "@types/qrcode": "^1.5.6",
+    "@typescript/native": "npm:typescript@~7.0.2",
+    "fake-indexeddb": "^6.2.5",
+    "svelte": "^5.56.10",
+    "svelte-check": "^4.7.6",
+    "tailwindcss": "^4",
+    "typescript": "~6",
+    "vite": "^8.2.2",
+    "vitest": "^4.1.11"
+  }
+}
