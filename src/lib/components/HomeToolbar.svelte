@@ -1,5 +1,5 @@
 <script lang="ts">
-  let { onNew, onTba, onImportQr, onClear }: { onNew: () => void; onTba: () => void; onImportQr: () => void; onClear: () => void } = $props();
+  let { onNew, onTba, onClear }: { onNew: () => void; onTba: () => void; onClear: () => void } = $props();
 </script>
 
 <div
@@ -16,9 +16,6 @@
   >
     Colosseum
   </div>
-  <!-- Paddings step down with the viewport: at full size the five buttons plus the
-       logo need ~1150px, so anything narrower than `lg` has to compact or the row
-       overflows the bar. -->
   <div class="flex shrink-0 gap-2 sm:gap-2.5 md:gap-3 lg:gap-4 items-center">
     <button
       id="home-toolbar-new-btn"
@@ -34,14 +31,6 @@
     >
       <span>TBA</span>
       <img src="/tba.svg" alt="TBA" class="h-6 sm:h-7 md:h-9 w-auto" />
-    </button>
-    <button
-      id="home-toolbar-import-btn"
-      class="flex items-center justify-center px-3 sm:px-4 md:px-6 lg:px-10 h-11 md:h-12 lg:h-14 btn-secondary text-sm sm:text-base md:text-lg lg:text-xl"
-      onclick={onImportQr}
-    >
-      <span class="hidden sm:inline">Import QR</span>
-      <span class="sm:hidden">Import</span>
     </button>
     <button
       id="home-toolbar-clear-btn"

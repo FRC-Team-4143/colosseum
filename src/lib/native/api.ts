@@ -3,7 +3,7 @@ import { invoke, isTauri, type InvokeArgs } from "@tauri-apps/api/core";
 import type {
   BoardMode, BoardState, BoardTool, CreateMatchInput, FieldRobotPositions,
   FuzzyBatchItem, FuzzyBatchMatch, FuzzyMatchResult, JsonValue, MatchPacket, NativeConfig,
-  PdfDocumentPlan, QrProgress, TbaEvent, TbaMatch, TbaSimpleEvent, TbaSimpleMatch,
+  PdfDocumentPlan, TbaEvent, TbaMatch, TbaSimpleEvent, TbaSimpleMatch,
 } from "./types";
 
 export class NativeCommandError extends Error {
@@ -87,9 +87,6 @@ export const native = {
   },
   qr: {
     encode: (payload: string) => call<string[]>("qr_encode", { payload }),
-    reset: () => call<void>("qr_reset"),
-    receive: (frame: string) => call<QrProgress>("qr_receive", { frame }),
-    restorePacket: (payload: string) => call<MatchPacket>("qr_restore_packet", { payload }),
   },
   search: {
     match: (searchTerm: string, target: string, originalTarget?: string) =>

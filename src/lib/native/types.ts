@@ -99,15 +99,6 @@ export interface TbaSimpleMatch {
   match_key: string;
 }
 
-export interface QrReceivingProgress {
-  status: "receiving";
-  received: number;
-  total: number;
-  duplicate: boolean;
-}
-export interface QrCompleteProgress { status: "complete"; payload: string; }
-export type QrProgress = QrReceivingProgress | QrCompleteProgress;
-
 export interface FuzzyMatchResult { score: number; matchedIndices: number[]; }
 /** Native batch-search schema. Pre-normalizing once keeps large match lists fast. */
 export interface FuzzyBatchItem {

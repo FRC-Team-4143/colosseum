@@ -17,7 +17,6 @@ pub type CommandResult<T> = Result<T, String>;
 pub struct RuntimeState {
     pub storage: Mutex<JsonFileStore>,
     pub board: Mutex<board::Board>,
-    pub qr_import: Mutex<qr::QrImportState>,
     pub tba_key: Mutex<Option<String>>,
     pub http: HttpAdapter,
 }
@@ -39,7 +38,6 @@ impl RuntimeState {
         Ok(Self {
             storage: Mutex::new(storage),
             board: Mutex::new(board::Board::default()),
-            qr_import: Mutex::new(qr::QrImportState::default()),
             tba_key: Mutex::new(tba_key),
             http,
         })
@@ -196,31 +194,6 @@ pub fn tba_simple_matches(matches: Vec<tba::TbaMatch>) -> Vec<tba::TbaSimpleMatc
 #[tauri::command]
 pub fn qr_encode(payload: String) -> CommandResult<Vec<String>> {
     qr::encode_frames(&payload).map_err(|error| error.to_string())
-}
-#[tauri::command]
-pub fn qr_reset(state: State<'_, RuntimeState>) -> CommandResult<()> {
-    lock(&state.qr_import)?.reset();
-    Ok(())
-}
-#[tauri::command]
-pub fn qr_receive(state: State<'_, RuntimeState>, frame: String) -> CommandResult<Value> {
-    match lock(&state.qr_import)?
-        .receive(&frame)
-        .map_err(|error| error.to_string())?
-    {
-        qr::ScanProgress::Receiving {
-            received,
-            total,
-            duplicate,
-        } => Ok(
-            json!({"status":"receiving", "received":received, "total":total, "duplicate":duplicate}),
-        ),
-        qr::ScanProgress::Complete(payload) => Ok(json!({"status":"complete", "payload":payload})),
-    }
-}
-#[tauri::command]
-pub fn qr_restore_packet(payload: String) -> CommandResult<Vec<Value>> {
-    qr::restore_match_packet_json(&payload).map_err(|error| error.to_string())
 }
 
 #[tauri::command]

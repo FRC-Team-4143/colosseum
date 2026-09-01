@@ -31,7 +31,6 @@
     "@tauri-apps/plugin-fs": "^2.5.1",
     "@tauri-apps/plugin-opener": "^2.5.4",
     "pdf-lib": "^1.17.1",
-    "qr-scanner": "^1.4.2",
     "qrcode": "^1.5.4"
   },
   "devDependencies": {

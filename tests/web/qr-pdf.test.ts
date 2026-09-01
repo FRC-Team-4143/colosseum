@@ -1,9 +1,10 @@
-import { beforeEach, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 
-import { __resetQr, encodeFrames, receiveFrame, restoreMatchPacket } from "$lib/native/web/qr";
+import { encodeFrames } from "$lib/native/web/qr";
 import { largePlan, standardPlan } from "$lib/native/web/pdf";
 
 // Ported from src-tauri/src/helpers/qr.rs and pdf.rs test suites.
+// (QR *import* was removed — only the encode side remains.)
 
 const rejection = (fn: () => unknown): string | undefined => {
   try {
@@ -14,52 +15,26 @@ const rejection = (fn: () => unknown): string | undefined => {
   }
 };
 
-describe("web qr framing port", () => {
-  beforeEach(() => __resetQr());
-
-  it("round trips a unicode payload in one frame with legacy headers", () => {
-    const payload = '{"team":"Méga 🤖","score":42}';
-    const frames = encodeFrames(payload);
-    expect(frames[0].slice(0, 8)).toBe("00000001");
-    expect(receiveFrame(frames[0])).toEqual({ status: "complete", payload });
+describe("web qr encode port", () => {
+  it("treats an empty payload as one headered frame", () => {
+    expect(encodeFrames("")).toEqual(["00000001"]);
   });
 
-  it("reassembles a multi-frame stream out of order and flags duplicates", () => {
+  it("round trips a unicode payload into one frame with a legacy header", () => {
+    const frames = encodeFrames('{"team":"Méga 🤖","score":42}');
+    expect(frames).toHaveLength(1);
+    expect(frames[0].slice(0, 8)).toBe("00000001");
+  });
+
+  it("splits a long payload into 200-char base64 chunks with IIIITTTT headers", () => {
     const frames = encodeFrames("x".repeat(400));
     expect(frames).toHaveLength(3);
-    expect(receiveFrame(frames[1])).toEqual({ status: "receiving", received: 1, total: 3, duplicate: false });
-    expect(receiveFrame(frames[1])).toEqual({ status: "receiving", received: 1, total: 3, duplicate: true });
-    expect(receiveFrame(frames[2])).toEqual({ status: "receiving", received: 2, total: 3, duplicate: false });
-    expect(receiveFrame(frames[0])).toEqual({ status: "complete", payload: "x".repeat(400) });
+    expect(frames[0].slice(0, 8)).toBe("00000003");
+    expect(frames.every((f) => f.length <= 8 + 200)).toBe(true);
   });
 
-  it("resets progress when a frame declares a different stream length", () => {
-    const first = encodeFrames("x".repeat(400));
-    const second = encodeFrames("new stream");
-    receiveFrame(first[0]);
-    expect(receiveFrame(second[0])).toEqual({ status: "complete", payload: "new stream" });
-  });
-
-  it("rejects malformed headers, out-of-range chunks and corrupt payloads", () => {
-    expect(rejection(() => receiveFrame("short"))).toBe("QR frame is shorter than its header");
-    expect(rejection(() => receiveFrame("abcd0001payload"))).toBe("QR frame header is not eight ASCII digits");
-    expect(rejection(() => receiveFrame("00000000"))).toBe("QR frame declares zero chunks");
-    expect(rejection(() => receiveFrame("00010001payload"))).toBe("QR chunk 1 is outside stream length 1");
-    expect(rejection(() => receiveFrame("00000001%%%%"))).toBe("QR payload is not valid base64");
-    expect(rejection(() => receiveFrame("00000001/w=="))).toBe("QR payload is not UTF-8");
-  });
-
-  it("treats an empty payload as one valid frame", () => {
-    expect(encodeFrames("")).toEqual(["00000001"]);
-    expect(receiveFrame("00000001")).toEqual({ status: "complete", payload: "" });
-  });
-
-  it("restores the dropped local-id slot", () => {
-    const packet = restoreMatchPacket("[0,1,2,3,4,5,6,8]");
-    expect(packet[7]).toBeNull();
-    expect(packet[8]).toBe(8);
-    expect(rejection(() => restoreMatchPacket("{}"))).toBe("QR match packet is not an array");
-    expect(rejection(() => restoreMatchPacket("not json"))).toMatch(/^QR payload is not JSON/);
+  it("rejects a stream that would need more than 9999 chunks", () => {
+    expect(rejection(() => encodeFrames("x".repeat(200 * 3 * 10000)))).toMatch(/maximum is 9999/);
   });
 });
 

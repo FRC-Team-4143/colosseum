@@ -11,7 +11,6 @@
   import MatchList from "$lib/components/MatchList.svelte";
   import OrientationWarning from "$lib/components/OrientationWarning.svelte";
   import QrExportModal from "$lib/components/QrExportModal.svelte";
-  import QrImportModal from "$lib/components/QrImportModal.svelte";
   import ReleaseAnnouncementModal from "$lib/components/ReleaseAnnouncementModal.svelte";
   import TbaImportModal from "$lib/components/TbaImportModal.svelte";
   import TeamNumberModal from "$lib/components/TeamNumberModal.svelte";
@@ -22,7 +21,6 @@
   let createOpen = $state(false);
   let clearOpen = $state(false);
   let tbaOpen = $state(false);
-  let qrImportOpen = $state(false);
   let releaseOpen = $state(false);
   let teamOpen = $state(false);
   let editing = $state<Match | null>(null);
@@ -121,10 +119,6 @@
     }
   }
 
-  async function importQr(packet: MatchPacket) {
-    await app.importPackets([packet]);
-  }
-
   async function saveTeam(team: string) {
     try {
       await saveTeamNumber(team);
@@ -148,7 +142,7 @@
 
 {#if app.screen === "home"}
   <div id="home-container" class="flex flex-col w-full h-full touch-none">
-    <HomeToolbar onNew={() => createOpen = true} onTba={() => tbaOpen = true} onImportQr={() => qrImportOpen = true} onClear={() => clearOpen = true} />
+    <HomeToolbar onNew={() => createOpen = true} onTba={() => tbaOpen = true} onClear={() => clearOpen = true} />
     <MatchList {matches} onOpen={(match) => app.openMatch(match.id)} onEdit={(match) => editing = match} onDuplicate={(match) => app.duplicateMatch(match.id)} onExportPng={(match) => { app.openMatch(match.id); pngRequest += 1; }} onExportQr={(match) => qrMatch = match} onDelete={(match) => app.deleteMatch(match.id)} />
   </div>
 {/if}
@@ -158,7 +152,6 @@
 <MatchEditorModal open={editing !== null} match={editing} onSave={save} onClose={() => editing = null} />
 <ConfirmModal open={clearOpen} title="Clear All Data?" message="This will permanently delete all matches and data. This action cannot be undone." confirmLabel="Clear All" destructive onConfirm={async () => { await app.clearAll(); clearOpen = false; }} onClose={() => clearOpen = false} />
 <TbaImportModal open={tbaOpen} onImport={importTba} onClose={() => tbaOpen = false} />
-<QrImportModal open={qrImportOpen} onImport={importQr} onNotice={notice} onClose={() => qrImportOpen = false} />
 <QrExportModal open={qrMatch !== null} packet={qrMatch ? app.matches.find((match) => match.id === qrMatch?.id)?.packet ?? null : null} matchName={qrMatch?.matchName || "this match"} onNotice={notice} onClose={() => qrMatch = null} />
 <ReleaseAnnouncementModal open={releaseOpen} announcement={releaseAnnouncement} onDismiss={dismissAnnouncement} onClose={() => releaseOpen = false} />
 <TeamNumberModal open={teamOpen} onSave={saveTeam} />
