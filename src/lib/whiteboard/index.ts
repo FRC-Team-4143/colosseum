@@ -18,6 +18,8 @@ type Action =
 
 const slots: readonly Slot[] = ["redOne", "redTwo", "redThree", "blueOne", "blueTwo", "blueThree"];
 const COLORS = ["#ffffff", "#ef4444", "#3b82f6", "#22c55e", "#eab308"] as const;
+/** Ignore `touch` on the canvas for this long after the stylus was last seen. */
+const PEN_TOUCH_GRACE_MS = 700;
 const VIEWS: Record<View, Point> = { full: [FIELD_WIDTH / 2, FIELD_HEIGHT / 2], red: [(FIELD_WIDTH * 3) / 4, FIELD_HEIGHT / 2], blue: [FIELD_WIDTH / 4, FIELD_HEIGHT / 2] };
 const fieldImageCache = new Map<string, HTMLImageElement>();
 
@@ -54,6 +56,13 @@ export class WhiteboardController {
   private imageYear: number | undefined;
   private selected: { slot: Slot; robot: RobotPosition; offset: Point; rotating: boolean; before: Pick<RobotPosition, "x" | "y" | "r"> } | null = null;
   private pointer: { id: number; last: Point; stroke: Stroke | null; erased: Extract<Action, { kind: "erase" }> } | null = null;
+  /**
+   * Palm rejection: once a stylus (Apple Pencil / any `pen` pointer) is in use,
+   * `touch` pointers are ignored on the canvas for a short grace window so a
+   * resting hand doesn't draw. A finger-only user never trips this.
+   */
+  private penActive = false;
+  private lastPenAt = -Infinity;
   private undoHistory = new Map<BoardPhaseName, Action[]>();
   private redoHistory = new Map<BoardPhaseName, Action[]>();
   private resizeObserver: ResizeObserver | null = null;
@@ -148,6 +157,15 @@ export class WhiteboardController {
   };
   private readonly onPointerDown = (event: PointerEvent): void => {
     if (!this.refs || !this.match || this.mode === "statbotics") return;
+    if (event.pointerType === "pen") {
+      this.penActive = true;
+      this.lastPenAt = event.timeStamp;
+      // If a palm landed a fraction before the tip and began a stroke, drop it.
+      if (this.pointer && !this.selected) { this.pointer = null; this.redrawDrawing(); }
+    } else if (event.pointerType === "touch" && this.rejectTouch(event.timeStamp)) {
+      // A resting palm / stray finger while the stylus is in use.
+      return;
+    }
     if (event.pointerType === "pen" && event.button === 1) { this.toggleTool(); return; }
     if (event.button !== 0 && event.pointerType !== "touch") return;
     event.preventDefault();
@@ -165,7 +183,13 @@ export class WhiteboardController {
     else if (this.tool === "checkbox") this.toggleCheckbox(point);
     else this.eraseSegment(point, point, erased);
   };
+  private rejectTouch(now: number): boolean {
+    return this.penActive || now - this.lastPenAt < PEN_TOUCH_GRACE_MS;
+  }
   private readonly onPointerMove = (event: PointerEvent): void => {
+    // Pen hover (no button down) still reaches here and keeps the grace window
+    // fresh, so a palm landing just before the tip is rejected too.
+    if (event.pointerType === "pen") this.lastPenAt = event.timeStamp;
     const pointer = this.pointer; if (!pointer || pointer.id !== event.pointerId) return;
     const point = this.eventPoint(event); if (!point) return;
     event.preventDefault();
@@ -176,6 +200,7 @@ export class WhiteboardController {
     } else if (this.tool === "eraser") { this.eraseSegment(pointer.last, point, pointer.erased); pointer.last = point; }
   };
   private readonly onPointerEnd = (event: PointerEvent): void => {
+    if (event.pointerType === "pen") { this.penActive = false; this.lastPenAt = event.timeStamp; }
     const pointer = this.pointer; if (!pointer || pointer.id !== event.pointerId) return;
     try { this.refs?.drawing.releasePointerCapture(event.pointerId); } catch { /* browser may already have released it */ }
     this.pointer = null;
