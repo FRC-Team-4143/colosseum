@@ -3,10 +3,9 @@
   import "../app.css";
   import { app } from "$lib/stores/app.svelte";
   import { native } from "$lib/native/api";
-  import { buildCommit, clonePacket, dismissRelease, isNativeRuntime, isReleaseDismissed, loadTeamNumber, saveTeamNumber, timeAgo } from "$lib/features";
+  import { clonePacket, dismissRelease, isNativeRuntime, isReleaseDismissed, loadTeamNumber, saveTeamNumber } from "$lib/features";
   import AppLoading from "$lib/components/AppLoading.svelte";
   import ConfirmModal from "$lib/components/ConfirmModal.svelte";
-  import ContributorsModal from "$lib/components/ContributorsModal.svelte";
   import HomeToolbar from "$lib/components/HomeToolbar.svelte";
   import MatchEditorModal from "$lib/components/MatchEditorModal.svelte";
   import MatchList from "$lib/components/MatchList.svelte";
@@ -24,7 +23,6 @@
   let clearOpen = $state(false);
   let tbaOpen = $state(false);
   let qrImportOpen = $state(false);
-  let contributorsOpen = $state(false);
   let releaseOpen = $state(false);
   let teamOpen = $state(false);
   let editing = $state<Match | null>(null);
@@ -152,50 +150,6 @@
   <div id="home-container" class="flex flex-col w-full h-full touch-none">
     <HomeToolbar onNew={() => createOpen = true} onTba={() => tbaOpen = true} onImportQr={() => qrImportOpen = true} onClear={() => clearOpen = true} />
     <MatchList {matches} onOpen={(match) => app.openMatch(match.id)} onEdit={(match) => editing = match} onDuplicate={(match) => app.duplicateMatch(match.id)} onExportPng={(match) => { app.openMatch(match.id); pngRequest += 1; }} onExportQr={(match) => qrMatch = match} onDelete={(match) => app.deleteMatch(match.id)} />
-    <div
-      id="home-bottom-bar"
-      class="w-full bg-[#0a0a0a] flex items-center justify-center border-t border-[#1a0f0f] relative"
-      style="min-height: 4rem; padding-bottom: env(safe-area-inset-bottom, 0px);"
-    >
-      <div class="flex items-center justify-center gap-4">
-        <a
-          href="https://github.com/FRC-Team-4143/colosseum"
-          target="_blank"
-          rel="noopener noreferrer"
-          class="flex items-center justify-center text-[#9a7878] hover:text-[#c9b0b0] transition-colors"
-          aria-label="GitHub"
-        >
-          <i class="fab fa-github text-2xl leading-none"></i>
-        </a>
-        <a
-          href="/privacy"
-          class="text-xs text-[#9a7878] hover:text-[#c9b0b0] transition-colors"
-        >
-          Privacy
-        </a>
-      </div>
-      <div id="last-commit-info" class="absolute left-6 text-[#9a7878] text-xs" style="top: 50%; transform: translateY(-50%);">
-        <a
-          href={buildCommit.url}
-          target="_blank"
-          rel="noopener noreferrer"
-          class="hover:text-[#9a7878] transition-colors flex items-center gap-2"
-          title="latest commit: {buildCommit.message}"
-        >
-          <span class="font-mono">{buildCommit.sha}</span>
-          <span>•</span>
-          <span>{timeAgo(new Date(buildCommit.date))}</span>
-        </a>
-      </div>
-      <button
-        id="contributors-link-btn"
-        class="absolute right-6 flex items-center text-[#9a7878] hover:text-[#c9b0b0] transition-colors text-base"
-        style="top: 50%; transform: translateY(-50%);"
-        onclick={() => contributorsOpen = true}
-      >
-        Team 4143
-      </button>
-    </div>
   </div>
 {/if}
 
@@ -206,7 +160,6 @@
 <TbaImportModal open={tbaOpen} onImport={importTba} onClose={() => tbaOpen = false} />
 <QrImportModal open={qrImportOpen} onImport={importQr} onNotice={notice} onClose={() => qrImportOpen = false} />
 <QrExportModal open={qrMatch !== null} packet={qrMatch ? app.matches.find((match) => match.id === qrMatch?.id)?.packet ?? null : null} matchName={qrMatch?.matchName || "this match"} onNotice={notice} onClose={() => qrMatch = null} />
-<ContributorsModal open={contributorsOpen} onClose={() => contributorsOpen = false} />
 <ReleaseAnnouncementModal open={releaseOpen} announcement={releaseAnnouncement} onDismiss={dismissAnnouncement} onClose={() => releaseOpen = false} />
 <TeamNumberModal open={teamOpen} onSave={saveTeam} />
 {#if toast}<button class="toast" onclick={() => toast = ""} aria-live="polite">{toast}</button>{/if}
