@@ -3,7 +3,7 @@
   import "../app.css";
   import { app } from "$lib/stores/app.svelte";
   import { native } from "$lib/native/api";
-  import { buildCommit, dismissRelease, isNativeRuntime, isReleaseDismissed, loadTeamNumber, saveTeamNumber, timeAgo } from "$lib/features";
+  import { buildCommit, clonePacket, dismissRelease, isNativeRuntime, isReleaseDismissed, loadTeamNumber, saveTeamNumber, timeAgo } from "$lib/features";
   import AppLoading from "$lib/components/AppLoading.svelte";
   import ConfirmModal from "$lib/components/ConfirmModal.svelte";
   import ContributorsModal from "$lib/components/ContributorsModal.svelte";
@@ -82,7 +82,8 @@
 
   async function save(values: MatchFormValues) {
     if (!editing) return;
-    const packet = structuredClone(app.matches.find((match) => match.id === editing?.id)?.packet) as MatchPacket | undefined;
+    const found = app.matches.find((match) => match.id === editing?.id)?.packet;
+    const packet = found ? (clonePacket(found) as MatchPacket) : undefined;
     if (!packet) return;
     packet[0] = values.matchName.trim() || "Untitled match";
     packet[1] = values.redOne; packet[2] = values.redTwo; packet[3] = values.redThree;

@@ -1,6 +1,7 @@
 import { native } from "$lib/native/api";
 import type { Alliance, CreateMatchInput, MatchPacket, StrategyMatch } from "$lib/native/types";
 import { readLegacyMatchPackets } from "$lib/features/legacy-migration";
+import { clonePacket } from "$lib/features/runtime";
 
 import { toast } from "./toast.svelte";
 
@@ -53,14 +54,14 @@ function asAlliance(teams: readonly string[]): Alliance {
 }
 
 function setPackets(next: MatchPacket[]): void {
-  packets = next.map((packet) => structuredClone(packet));
+  packets = next.map((packet) => clonePacket(packet));
 }
 
 function replaceInMemory(packet: MatchPacket): void {
   const index = packets.findIndex((candidate) => candidate[7] === packet[7]);
   if (index === -1) throw new Error("Cannot update a match that is not loaded.");
   const next = [...packets];
-  next[index] = structuredClone(packet);
+  next[index] = clonePacket(packet);
   packets = next;
 }
 
@@ -84,7 +85,7 @@ async function createMatch(inputOrName: CreateMatchInput | string, red?: readonl
   return queueWrite(async () => {
     const packet = await native.matches.createPacket(input);
     const id = await native.model.addPacket(packet);
-    packets = [...packets, structuredClone(packet)];
+    packets = [...packets, clonePacket(packet)];
     return id;
   });
 }
@@ -172,7 +173,7 @@ export const app = {
         ...(source[10] ? { tbaMatchKey: source[10] } : {}),
         ...(source[11] !== null && source[11] !== undefined ? { tbaYear: source[11] } : {}),
       });
-      const copy = structuredClone(source);
+      const copy = clonePacket(source);
       copy[0] = fresh[0];
       copy[7] = fresh[7];
       const newId = await native.model.addPacket(copy);
@@ -192,7 +193,7 @@ export const app = {
   async updateMatch(id: string, update: MatchInfoUpdate): Promise<void> {
     const source = packets.find((packet) => packet[7] === id);
     if (!source) throw new Error("Cannot update a match that is not loaded.");
-    const next = structuredClone(source);
+    const next = clonePacket(source);
     next[0] = update.matchName;
     next[1] = update.redOne;
     next[2] = update.redTwo;
