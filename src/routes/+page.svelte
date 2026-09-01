@@ -128,9 +128,13 @@
   }
 
   async function saveTeam(team: string) {
-    await saveTeamNumber(team);
-    teamOpen = false;
-    notice(`Team ${team} saved.`);
+    try {
+      await saveTeamNumber(team);
+      teamOpen = false;
+      notice(`Team ${team} saved.`);
+    } catch (error) {
+      notice(error instanceof Error ? error.message : String(error));
+    }
   }
 
   async function dismissAnnouncement() {

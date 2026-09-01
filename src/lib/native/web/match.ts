@@ -61,6 +61,24 @@ export interface MatchModel {
   notes: Phase;
 }
 
+/**
+ * A random id for a new match. `crypto.randomUUID()` is only defined in a secure
+ * context, so it's absent on an iPad hitting `http://<lan-ip>` — fall back to a
+ * v4 UUID from `crypto.getRandomValues` (which works everywhere), then to
+ * `Math.random` as a last resort. Ids only need to be unique strings.
+ */
+function randomId(): string {
+  const c = globalThis.crypto as Crypto | undefined;
+  if (c?.randomUUID) return c.randomUUID();
+  const bytes = new Uint8Array(16);
+  if (c?.getRandomValues) c.getRandomValues(bytes);
+  else for (let i = 0; i < 16; i += 1) bytes[i] = Math.floor(Math.random() * 256);
+  bytes[6] = (bytes[6] & 0x0f) | 0x40;
+  bytes[8] = (bytes[8] & 0x3f) | 0x80;
+  const hex = [...bytes].map((b) => b.toString(16).padStart(2, "0")).join("");
+  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
+}
+
 const ROBOT_KEYS = [
   "redOneRobot",
   "redTwoRobot",
@@ -237,7 +255,7 @@ export function createMatch(
     blueOne: blue[0],
     blueTwo: blue[1],
     blueThree: blue[2],
-    id: id ?? crypto.randomUUID(),
+    id: id ?? randomId(),
     tbaEventKey,
     tbaMatchKey,
     tbaYear,
