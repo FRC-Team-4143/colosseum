@@ -3,7 +3,7 @@
   import "../app.css";
   import { app } from "$lib/stores/app.svelte";
   import { native } from "$lib/native/api";
-  import { clonePacket, dismissRelease, isNativeRuntime, isReleaseDismissed, loadTeamNumber, saveTeamNumber } from "$lib/features";
+  import { clonePacket, dismissRelease, isReleaseDismissed, loadTeamNumber, saveTeamNumber } from "$lib/features";
   import AppLoading from "$lib/components/AppLoading.svelte";
   import ConfirmModal from "$lib/components/ConfirmModal.svelte";
   import HomeToolbar from "$lib/components/HomeToolbar.svelte";
@@ -41,14 +41,6 @@
 
   onMount(() => {
     let active = true;
-    const openExternal = (event: MouseEvent) => {
-      if (!isNativeRuntime() || event.defaultPrevented || event.button !== 0) return;
-      const anchor = event.target instanceof Element ? event.target.closest<HTMLAnchorElement>('a[target="_blank"]') : null;
-      if (!anchor) return;
-      event.preventDefault();
-      void native.platform.openUrl(anchor.href).catch(() => notice("Could not open that link."));
-    };
-    window.addEventListener("click", openExternal);
     void (async () => {
       await app.init();
       const [teamNumber, config] = await Promise.all([loadTeamNumber().catch(() => null), native.config.current().catch(() => null)]);
@@ -59,7 +51,7 @@
         if (active) { releaseAnnouncement = announcement; releaseOpen = true; }
       }
     })().catch(() => notice("Some startup services could not be loaded."));
-    return () => { active = false; window.removeEventListener("click", openExternal); };
+    return () => { active = false; };
   });
 
   function notice(message: string) {

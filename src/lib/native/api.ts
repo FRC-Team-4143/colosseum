@@ -1,4 +1,4 @@
-import { invoke, isTauri, type InvokeArgs } from "@tauri-apps/api/core";
+import type { InvokeArgs } from "./web";
 
 import type {
   BoardMode, BoardState, BoardTool, CreateMatchInput, FieldRobotPositions,
@@ -20,16 +20,11 @@ export class NativeCommandError extends Error {
 /**
  * One typed boundary for all native calls. Do not use it from pointer-move paths.
  *
- * Inside the Tauri shell this is a straight `invoke`, unchanged. In a plain
- * browser (the static web build) there is no Rust backend, so the call is routed
- * to the JavaScript implementation in `./web`, which is code-split out of the
- * desktop bundle and only fetched when `isTauri()` is false.
+ * Colosseum is a browser app with no Rust backend: every call is routed to the
+ * JavaScript implementation in `./web` (a lazily-imported, code-split chunk).
  */
 async function call<TResult>(command: string, args?: InvokeArgs): Promise<TResult> {
   try {
-    if (isTauri()) {
-      return await invoke<TResult>(command, args);
-    }
     const { webInvoke } = await import("./web");
     return await webInvoke<TResult>(command, args);
   } catch (error) {

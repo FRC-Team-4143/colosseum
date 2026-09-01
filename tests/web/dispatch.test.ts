@@ -11,7 +11,7 @@ describe("webInvoke dispatch", () => {
   });
 
   it("throws a clear message for a command with no browser implementation", async () => {
-    await expect(webInvoke("totally_not_a_command")).rejects.toThrow(/web build yet/);
+    await expect(webInvoke("totally_not_a_command")).rejects.toThrow(/not implemented/);
   });
 
   it("passes the argument record to the handler and returns its result", async () => {

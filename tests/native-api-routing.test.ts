@@ -1,63 +1,31 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
-
-// The only seam between the Svelte frontend and the native backend is
-// `call()` in src/lib/native/api.ts. Phase 0 adds a browser branch to it; these
-// tests pin that the Tauri path is byte-for-byte what it was before, and that
-// the browser path never reaches `invoke`.
-vi.mock("@tauri-apps/api/core", () => ({
-  invoke: vi.fn(),
-  isTauri: vi.fn(),
-}));
-
-import { invoke, isTauri } from "@tauri-apps/api/core";
+import { describe, expect, it } from "vitest";
 
 import { NativeCommandError, native } from "$lib/native/api";
+import type { CreateMatchInput } from "$lib/native/types";
 
-const invokeMock = vi.mocked(invoke);
-const isTauriMock = vi.mocked(isTauri);
-
-beforeEach(() => {
-  invokeMock.mockReset();
-  isTauriMock.mockReset();
-});
-
+// The only seam between the Svelte frontend and the backend command surface is
+// `call()` in src/lib/native/api.ts. Colosseum has no Rust backend: every
+// command routes to the browser implementation in src/lib/native/web, and a
+// failure there is wrapped in NativeCommandError carrying the command name.
 describe("native command routing", () => {
-  it("calls Tauri invoke unchanged when a native backend is present", async () => {
-    isTauriMock.mockReturnValue(true);
-    invokeMock.mockResolvedValue({ ok: true });
-
-    const result = await native.config.current();
-
-    expect(invokeMock).toHaveBeenCalledTimes(1);
-    expect(invokeMock).toHaveBeenCalledWith("config_current", undefined);
-    expect(result).toEqual({ ok: true });
-  });
-
-  it("forwards command arguments to invoke untouched", async () => {
-    isTauriMock.mockReturnValue(true);
-    invokeMock.mockResolvedValue(null);
-
-    await native.storage.set("teamNumber", "4143");
-    await native.model.deleteMatch("abc123");
-
-    expect(invokeMock).toHaveBeenNthCalledWith(1, "storage_set", { key: "teamNumber", value: "4143" });
-    expect(invokeMock).toHaveBeenNthCalledWith(2, "model_delete_match", { id: "abc123" });
-  });
-
-  it("wraps a failed invoke in NativeCommandError (Tauri path, unchanged)", async () => {
-    isTauriMock.mockReturnValue(true);
-    invokeMock.mockRejectedValue("boom");
-
-    await expect(native.model.loadPackets()).rejects.toBeInstanceOf(NativeCommandError);
-    await expect(native.model.loadPackets()).rejects.toMatchObject({ command: "model_load_packets" });
-  });
-
-  it("routes to the web implementation and never touches invoke when there is no backend", async () => {
-    isTauriMock.mockReturnValue(false);
-
+  it("routes commands to the web implementation", async () => {
     const config = await native.config.current();
-
     expect(config).toMatchObject({ fieldPngPixelWidth: 3510 });
-    expect(invokeMock).not.toHaveBeenCalled();
+  });
+
+  it("forwards arguments to the web handler", async () => {
+    const packet = await native.matches.createPacket({
+      matchName: "Quals 1",
+      redTeams: ["111", "222", "333"],
+      blueTeams: ["444", "555", "666"],
+    });
+    expect(packet[0]).toBe("Quals 1");
+    expect(packet.slice(1, 7)).toEqual(["111", "222", "333", "444", "555", "666"]);
+  });
+
+  it("wraps a rejecting command in NativeCommandError", async () => {
+    const bad = { matchName: "x", redTeams: ["1", "2"], blueTeams: ["3", "4", "5"] } as unknown as CreateMatchInput;
+    await expect(native.matches.createPacket(bad)).rejects.toBeInstanceOf(NativeCommandError);
+    await expect(native.matches.createPacket(bad)).rejects.toMatchObject({ command: "match_create_packet" });
   });
 });

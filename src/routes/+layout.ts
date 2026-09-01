@@ -1,5 +1,3 @@
-// Tauri doesn't have a Node.js server to do proper SSR
-// so we use adapter-static with a fallback to index.html to put the site in SPA mode
-// See: https://svelte.dev/docs/kit/single-page-apps
-// See: https://v2.tauri.app/start/frontend/sveltekit/ for more info
+// Colosseum is a client-rendered SPA (adapter-static with an index.html fallback);
+// the FastAPI backend serves the built bundle and the /api routes.
 export const ssr = false;

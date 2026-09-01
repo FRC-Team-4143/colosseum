@@ -1,5 +1,3 @@
-import type { InvokeArgs } from "@tauri-apps/api/core";
-
 import { boardCommands } from "./board";
 import { configCommands } from "./config";
 import { fieldCommands } from "./field";
@@ -12,14 +10,12 @@ import { storageCommands } from "./storage";
 import { tbaCommands } from "./tba";
 
 /**
- * Browser implementations of the native (Tauri) command surface, used by the
- * static web build where there is no Rust backend.
- *
- * This module is only imported when `isTauri()` is false (see `../api.ts`), so
- * it is code-split out of the desktop bundle entirely. It implements the whole
- * command surface: config, field, platform, storage, board, model_*, match_*,
- * qr_*, pdf_*, fuzzy_*, and tba_*.
+ * Browser implementations of the command surface behind `native.*` (see
+ * `../api.ts`). Colosseum has no Rust backend; this is the whole implementation:
+ * config, field, platform, storage, board, model_*, match_*, qr_*, pdf_*,
+ * fuzzy_*, and tba_*.
  */
+export type InvokeArgs = Record<string, unknown> | undefined;
 export type WebCommandHandler = (args: Record<string, unknown>) => unknown | Promise<unknown>;
 
 /** command name -> browser implementation. */
@@ -36,19 +32,16 @@ export const webCommands: Record<string, WebCommandHandler> = {
   ...tbaCommands,
 };
 
-function toArgRecord(args: InvokeArgs | undefined): Record<string, unknown> {
-  return args && typeof args === "object" && !Array.isArray(args)
-    && !(args instanceof ArrayBuffer) && !ArrayBuffer.isView(args)
-    ? (args as Record<string, unknown>)
-    : {};
+function toArgRecord(args: InvokeArgs): Record<string, unknown> {
+  return args && typeof args === "object" && !Array.isArray(args) ? args : {};
 }
 
 export async function webInvoke<TResult>(command: string, args?: InvokeArgs): Promise<TResult> {
   const handler = webCommands[command];
   if (!handler) {
-    // Thrown as a string to match Tauri's `invoke` rejection shape, which the
-    // `NativeCommandError` wrapper in ../api.ts surfaces verbatim as the message.
-    throw `"${command}" is not available in the Colosseum web build yet (no native backend).`;
+    // Thrown as a string so the `NativeCommandError` wrapper in ../api.ts
+    // surfaces it verbatim as the message.
+    throw `"${command}" is not implemented.`;
   }
   return (await handler(toArgRecord(args))) as TResult;
 }
