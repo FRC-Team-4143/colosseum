@@ -40,6 +40,24 @@ class TbaCache(Base):
     fetched_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.utcnow)
 
 
+class Whiteboard(Base):
+    """A saved strategy board. Per-workspace (4143 and 4423 keep their own); everyone on
+    a team sees that team's boards. The board itself is stored as an opaque JSON blob —
+    the positional match packet from the frontend — which the server never interprets.
+    `id` is the packet's own client-generated id; `tba_match_key` is denormalized from the
+    packet for open-by-match lookups; `updated_at` drives last-write-wins conflict
+    detection."""
+    __tablename__ = "whiteboards"
+    id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    workspace: Mapped[int] = mapped_column(Integer, nullable=False, index=True)
+    tba_match_key: Mapped[Optional[str]] = mapped_column(String(40), nullable=True, index=True)
+    packet_json: Mapped[str] = mapped_column(Text, nullable=False)
+    updated_by: Mapped[str] = mapped_column(String(120), nullable=False, default="")
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow
+    )
+
+
 class PickListEntry(Base):
     """One team on a workspace's pick list for an event. Per-workspace (4143 and 4423 keep
     separate lists) and per-event. `position` is a dense 0-based order; `tag` is

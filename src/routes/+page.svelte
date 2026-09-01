@@ -6,6 +6,7 @@
   import { eventStore } from "$lib/stores/event.svelte";
   import { pickList } from "$lib/stores/picklist.svelte";
   import { scouting } from "$lib/stores/scouting.svelte";
+  import { toast } from "$lib/stores/toast.svelte";
   import { native } from "$lib/native/api";
   import { clonePacket, dismissRelease, isReleaseDismissed } from "$lib/features";
   import AppLoading from "$lib/components/AppLoading.svelte";
@@ -30,7 +31,7 @@
   let releaseOpen = $state(false);
   let editing = $state<Match | null>(null);
   let qrMatch = $state<Match | null>(null);
-  let toast = $state("");
+  let toastText = $state("");
   let pngRequest = $state(0);
   let refreshing = $state(false);
   let releaseAnnouncement = $state<ReleaseAnnouncement | null>(null);
@@ -71,8 +72,8 @@
   });
 
   function notice(message: string) {
-    toast = message;
-    window.setTimeout(() => { if (toast === message) toast = ""; }, 3500);
+    toastText = message;
+    window.setTimeout(() => { if (toastText === message) toastText = ""; }, 3500);
   }
 
   async function create(values: MatchFormValues) {
@@ -217,7 +218,10 @@
   <ReleaseAnnouncementModal open={releaseOpen} announcement={releaseAnnouncement} onDismiss={dismissAnnouncement} onClose={() => (releaseOpen = false)} />
 {/if}
 
-{#if toast}<button class="toast" onclick={() => (toast = "")} aria-live="polite">{toast}</button>{/if}
+{#if toastText}<button class="toast" onclick={() => (toastText = "")} aria-live="polite">{toastText}</button>{/if}
+{#each toast.messages as message (message.id)}
+  <button class="toast toast-{message.kind}" onclick={() => toast.dismiss(message.id)}>{message.text}</button>
+{/each}
 
 <style>
   #hub-container {
@@ -279,4 +283,8 @@
     font-family: inherit;
     font-size: 1rem;
   }
+  .toast-warning { border-color: #7a5a1a; }
+  .toast-error { border-color: #7a2a1a; }
+  /* Stack store toasts above the transient one. */
+  .toast + .toast { bottom: calc(max(1.25rem, env(safe-area-inset-bottom)) + 3.5rem); }
 </style>

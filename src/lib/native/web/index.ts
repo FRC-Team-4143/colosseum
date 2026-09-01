@@ -1,7 +1,7 @@
 import { boardCommands } from "./board";
 import { configCommands } from "./config";
 import { fieldCommands } from "./field";
-import { modelCommands } from "./model";
+import { matchCommands } from "./model";
 import { pdfCommands } from "./pdf";
 import { platformCommands } from "./platform";
 import { qrCommands } from "./qr";
@@ -11,9 +11,9 @@ import { tbaCommands } from "./tba";
 
 /**
  * Browser implementations of the command surface behind `native.*` (see
- * `../api.ts`). Colosseum has no Rust backend; this is the whole implementation:
- * config, field, platform, storage, board, model_*, match_*, qr_*, pdf_*,
- * fuzzy_*, and tba_*.
+ * `../api.ts`): config, field, platform, storage, board, match_*, qr_*, pdf_*,
+ * fuzzy_*, and tba_*. (Board persistence — the old model_* — moved to the
+ * FastAPI backend; see `src/lib/api/whiteboards.ts`.)
  */
 export type InvokeArgs = Record<string, unknown> | undefined;
 export type WebCommandHandler = (args: Record<string, unknown>) => unknown | Promise<unknown>;
@@ -25,7 +25,7 @@ export const webCommands: Record<string, WebCommandHandler> = {
   ...platformCommands,
   ...storageCommands,
   ...boardCommands,
-  ...modelCommands,
+  ...matchCommands,
   ...qrCommands,
   ...pdfCommands,
   ...searchCommands,

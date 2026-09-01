@@ -45,16 +45,6 @@ export const native = {
     clear: () => call<void>("storage_clear"),
     entries: () => call<Array<[string, JsonValue]>>("storage_entries"),
   },
-  model: {
-    loadPackets: () => call<MatchPacket[]>("model_load_packets"),
-    addPacket: (packet: MatchPacket) => call<string>("model_add_packet", { packet }),
-    /** Atomic import path for TBA, QR, and cloud packets. */
-    addPackets: (packets: MatchPacket[]) => call<string[]>("model_add_packets", { packets }),
-    /** Atomic normalized replacement for a completed form or canvas commit. */
-    replacePacket: (packet: MatchPacket) => call<string>("model_replace_packet", { packet }),
-    deleteMatch: (id: string) => call<void>("model_delete_match", { id }),
-    clearMatches: () => call<void>("model_clear_matches"),
-  },
   matches: {
     createPacket: (input: CreateMatchInput) => call<MatchPacket>("match_create_packet", { ...input }),
     normalizePacket: (packet: MatchPacket) => call<MatchPacket>("match_normalize_packet", { packet }),
