@@ -150,7 +150,7 @@
     <MatchList {matches} onOpen={(match) => app.openMatch(match.id)} onEdit={(match) => editing = match} onDuplicate={(match) => app.duplicateMatch(match.id)} onExportPng={(match) => { app.openMatch(match.id); pngRequest += 1; }} onExportQr={(match) => qrMatch = match} onDelete={(match) => app.deleteMatch(match.id)} />
     <div
       id="home-bottom-bar"
-      class="w-full bg-[#0d0d0d] flex items-center justify-center border-t border-[#1a1a1a] relative"
+      class="w-full bg-[#0a0a0a] flex items-center justify-center border-t border-[#1a0f0f] relative"
       style="min-height: 4rem; padding-bottom: env(safe-area-inset-bottom, 0px);"
     >
       <div class="flex items-center justify-center gap-4">
@@ -158,24 +158,24 @@
           href="https://github.com/FRC-Team-4143/colosseum"
           target="_blank"
           rel="noopener noreferrer"
-          class="flex items-center justify-center text-[#999] hover:text-[#ccc] transition-colors"
+          class="flex items-center justify-center text-[#9a7878] hover:text-[#c9b0b0] transition-colors"
           aria-label="GitHub"
         >
           <i class="fab fa-github text-2xl leading-none"></i>
         </a>
         <a
           href="/privacy"
-          class="text-xs text-[#999] hover:text-[#ccc] transition-colors"
+          class="text-xs text-[#9a7878] hover:text-[#c9b0b0] transition-colors"
         >
           Privacy
         </a>
       </div>
-      <div id="last-commit-info" class="absolute left-6 text-[#999] text-xs" style="top: 50%; transform: translateY(-50%);">
+      <div id="last-commit-info" class="absolute left-6 text-[#9a7878] text-xs" style="top: 50%; transform: translateY(-50%);">
         <a
           href={buildCommit.url}
           target="_blank"
           rel="noopener noreferrer"
-          class="hover:text-[#999] transition-colors flex items-center gap-2"
+          class="hover:text-[#9a7878] transition-colors flex items-center gap-2"
           title="latest commit: {buildCommit.message}"
         >
           <span class="font-mono">{buildCommit.sha}</span>
@@ -185,7 +185,7 @@
       </div>
       <button
         id="contributors-link-btn"
-        class="absolute right-6 flex items-center text-[#999] hover:text-[#ccc] transition-colors text-base"
+        class="absolute right-6 flex items-center text-[#9a7878] hover:text-[#c9b0b0] transition-colors text-base"
         style="top: 50%; transform: translateY(-50%);"
         onclick={() => contributorsOpen = true}
       >
@@ -218,10 +218,10 @@
     max-width: calc(100vw - 2rem);
     padding: 0.75rem 1.25rem;
     transform: translateX(-50%);
-    color: #e8e8e8;
-    border: 1px solid #2a2a2a;
+    color: #f0e8e8;
+    border: 1px solid #2a1a1a;
     border-radius: 6px;
-    background: #141414;
+    background: #111111;
     font-family: inherit;
     font-size: 1rem;
   }

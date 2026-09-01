@@ -17,14 +17,14 @@
   ] as const;
 
   const numberField =
-    "text-lg sm:text-xl md:text-2xl lg:text-3xl text-center p-2 sm:p-3 md:p-4 bg-[#0d0d0d] border-r border-[#2a2a2a] outline-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none";
+    "text-lg sm:text-xl md:text-2xl lg:text-3xl text-center p-2 sm:p-3 md:p-4 bg-[#0a0a0a] border-r border-[#2a1a1a] outline-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none";
 </script>
 
 <input
   id="{idPrefix}-name"
   placeholder="Match Name"
   maxlength="25"
-  class="w-full py-5 px-8 text-xl text-center text-[#e8e8e8] font-semibold bg-[#111111] border-b border-[#1e1e1e] outline-0 rounded-none"
+  class="w-full py-5 px-8 text-xl text-center text-[#f0e8e8] font-semibold bg-[#111111] border-b border-[#2a1a1a] outline-0 rounded-none"
   autocomplete="off"
   autocapitalize="off"
   spellcheck="false"

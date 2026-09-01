@@ -65,10 +65,10 @@
   panelId="qr-import-inner-container"
   layer=""
   title="Import QR code"
-  panelClass="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center justify-between bg-[#141414] border border-[#1e1e1e] rounded-[6px] p-4 max-h-[90vh] overflow-y-auto"
+  panelClass="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center justify-between bg-[#111111] border border-[#2a1a1a] rounded-[6px] p-4 max-h-[90vh] overflow-y-auto"
   {onClose}
 >
-  <div id="qr-import-status" class="mb-3 text-[#e8e8e8] font-semibold select-none">
+  <div id="qr-import-status" class="mb-3 text-[#f0e8e8] font-semibold select-none">
     <span id="qr-import-status-text" aria-live="polite">{status}</span>
   </div>
 
@@ -80,7 +80,7 @@
 
   <select
     id="qr-import-camera-select"
-    class="text-sm mt-3 w-full rounded-[6px] p-2 bg-[#0d0d0d] border border-[#2a2a2a] text-[#e8e8e8] outline-0"
+    class="text-sm mt-3 w-full rounded-[6px] p-2 bg-[#0a0a0a] border border-[#2a1a1a] text-[#f0e8e8] outline-0"
     bind:value={cameraId}
     onchange={selectCamera}
     aria-label="Camera"

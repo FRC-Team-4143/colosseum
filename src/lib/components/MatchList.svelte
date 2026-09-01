@@ -41,19 +41,19 @@
 
 <div
   id="home-match-list"
-  class="relative w-full p-10 flex-1 flex flex-col gap-3 items-stretch overflow-y-auto bg-[#0d0d0d]"
+  class="relative w-full p-10 flex-1 flex flex-col gap-3 items-stretch overflow-y-auto bg-[#0a0a0a]"
   class:match-list-actions-open={openId !== null}
 >
   {#if matches.length === 0}
-    <div id="home-match-list-empty-placeholder" class="absolute inset-x-0 top-1/2 -translate-y-1/2 px-4 text-center text-[#999] text-xl pointer-events-none">
+    <div id="home-match-list-empty-placeholder" class="absolute inset-x-0 top-1/2 -translate-y-1/2 px-4 text-center text-[#9a7878] text-xl pointer-events-none">
       Click
-      <span class="not-italic text-[#999] bg-[#1a1a1a] border border-[#2a2a2a] px-3 py-1 rounded">New</span>
+      <span class="not-italic text-[#9a7878] bg-[#1a0f0f] border border-[#2a1a1a] px-3 py-1 rounded">New</span>
       to add matches
     </div>
   {/if}
   {#each matches as match (match.id)}
     <div
-      class="w-full h-[5.5rem] bg-[#141414] border border-[#1e1e1e] flex shrink-0 justify-between items-center rounded-xl px-10"
+      class="w-full h-[5.5rem] bg-[#111111] border border-[#2a1a1a] flex shrink-0 justify-between items-center rounded-xl px-10"
       class:match-actions-open={openId === match.id}
       tabindex="0"
       role="button"
@@ -61,14 +61,14 @@
       onkeydown={(event) => { if (event.key === "Enter") open(match); }}
       onfocusout={closeActions}
     >
-      <div class="grow-1 basis-0 text-[#e8e8e8] font-semibold text-2xl select-none overflow-hidden text-ellipsis whitespace-nowrap">
+      <div class="grow-1 basis-0 text-[#f0e8e8] font-semibold text-2xl select-none overflow-hidden text-ellipsis whitespace-nowrap">
         {match.matchName}
       </div>
       <div class="w-1/2 flex justify-center items-center gap-3 sm:gap-5 md:gap-8">
         <div class="w-1/2 text-[#c97070] text-xl text-right select-none overflow-hidden text-ellipsis whitespace-nowrap">
           {@render teamList(redTeams(match), "text-red-400")}
         </div>
-        <div class="text-[#999] text-xl select-none">VS</div>
+        <div class="text-[#9a7878] text-xl select-none">VS</div>
         <div class="w-1/2 text-[#6090c9] text-xl select-none overflow-hidden text-ellipsis whitespace-nowrap">
           {@render teamList(blueTeams(match), "text-blue-400")}
         </div>
@@ -80,9 +80,9 @@
             onclick={(event) => { event.stopPropagation(); openId = match.id; }}
             aria-label={`Actions for ${match.matchName}`}
           >
-            <div class="menu-dot w-2.5 h-2.5 rounded-full bg-[#555]"></div>
-            <div class="menu-dot w-2.5 h-2.5 rounded-full bg-[#555]"></div>
-            <div class="menu-dot w-2.5 h-2.5 rounded-full bg-[#555]"></div>
+            <div class="menu-dot w-2.5 h-2.5 rounded-full bg-[#5a3535]"></div>
+            <div class="menu-dot w-2.5 h-2.5 rounded-full bg-[#5a3535]"></div>
+            <div class="menu-dot w-2.5 h-2.5 rounded-full bg-[#5a3535]"></div>
           </button>
         {:else}
           <div class="flex items-center justify-center gap-3 sm:gap-4" onclick={(event) => event.stopPropagation()} role="presentation">

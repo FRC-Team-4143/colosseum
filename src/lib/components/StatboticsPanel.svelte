@@ -184,9 +184,9 @@
 {#if visible}
   {#if !hasTbaIdentity(match) || error}
     <div id="statbotics-empty-state" class="flex flex-col items-center justify-center h-full p-4 md:p-8" role="status">
-      <i class="fa fa-chart-line text-6xl text-[#999] mb-4"></i>
-      <h2 class="text-2xl font-bold text-[#e8e8e8] mb-2">Stats Data Not Available</h2>
-      <p class="text-[#666] text-center max-w-md">
+      <i class="fa fa-chart-line text-6xl text-[#9a7878] mb-4"></i>
+      <h2 class="text-2xl font-bold text-[#f0e8e8] mb-2">Stats Data Not Available</h2>
+      <p class="text-[#7a5a5a] text-center max-w-md">
         {#if error}
           {error}
         {:else}
@@ -201,21 +201,21 @@
     <div id="statbotics-loading-state" class="flex flex-col items-center justify-center h-full p-4 md:p-8" role="status">
       <div class="flex flex-col items-center">
         <div class="relative w-16 h-16 mb-4">
-          <div class="absolute inset-0 border-4 border-[#222] rounded-full"></div>
-          <div class="absolute inset-0 border-4 border-[#888] rounded-full border-t-transparent animate-spin"></div>
+          <div class="absolute inset-0 border-4 border-[#1e1010] rounded-full"></div>
+          <div class="absolute inset-0 border-4 border-[#9a7878] rounded-full border-t-transparent animate-spin"></div>
         </div>
-        <h2 class="text-xl font-bold text-[#e8e8e8] mb-2">Loading Stats...</h2>
-        <p class="text-[#666] text-center">Fetching data from Statbotics</p>
+        <h2 class="text-xl font-bold text-[#f0e8e8] mb-2">Loading Stats...</h2>
+        <p class="text-[#7a5a5a] text-center">Fetching data from Statbotics</p>
       </div>
     </div>
   {:else if data}
     <div id="statbotics-data-container" class="flex flex-col p-4 md:p-8">
       {#if formattedTime(data.cacheTimestamp)}
-        <p id="statbotics-last-updated" class="text-xs text-[#666] text-right mb-2">Last updated {formattedTime(data.cacheTimestamp)}</p>
+        <p id="statbotics-last-updated" class="text-xs text-[#7a5a5a] text-right mb-2">Last updated {formattedTime(data.cacheTimestamp)}</p>
       {/if}
 
-      <div class="bg-[#141414] border border-[#1e1e1e] rounded-[6px] p-4 md:p-6 mb-4">
-        <h3 class="text-xl md:text-2xl font-bold text-[#e8e8e8] mb-3 text-center">Win Probability</h3>
+      <div class="bg-[#111111] border border-[#2a1a1a] rounded-[6px] p-4 md:p-6 mb-4">
+        <h3 class="text-xl md:text-2xl font-bold text-[#f0e8e8] mb-3 text-center">Win Probability</h3>
         <div class="flex items-center gap-3 mb-3">
           <span class="text-red-400 font-bold text-lg w-14">Red</span>
           <div class="flex-1 flex h-6 rounded-full overflow-hidden">
@@ -229,8 +229,8 @@
           <span id="statbotics-blue-win-prob" class="text-blue-400 text-xl font-bold">{round(data.blueWinProbability * 100, 0)}%</span>
         </div>
         {#if data.redScore !== null && data.blueScore !== null}
-          <div class="text-center mt-3 pt-3 border-t border-[#1e1e1e]">
-            <span id="statbotics-match-result" class="text-sm md:text-base font-semibold text-[#999]">
+          <div class="text-center mt-3 pt-3 border-t border-[#2a1a1a]">
+            <span id="statbotics-match-result" class="text-sm md:text-base font-semibold text-[#9a7878]">
               {data.scoresAreFinal ? "Final" : "Predicted"} {round(data.redScore, 0)} – {round(data.blueScore, 0)}
             </span>
           </div>
@@ -242,12 +242,12 @@
 
       {#if selectedTeam}
         <div id="epa-details-modal" class="fixed inset-0 backdrop-blur-sm z-50 flex items-center justify-center p-4" role="presentation" onclick={(event) => { if (event.target === event.currentTarget) selectedTeam = null; }}>
-          <div class="bg-[#141414] rounded-[6px] p-6 max-w-md w-full border border-[#1e1e1e]" role="dialog" aria-modal="true">
+          <div class="bg-[#111111] rounded-[6px] p-6 max-w-md w-full border border-[#2a1a1a]" role="dialog" aria-modal="true">
             <div class="flex justify-between items-center mb-4">
-              <h3 class="text-xl font-bold text-[#e8e8e8]">Team <span id="epa-modal-team">{selectedTeam.number}</span> Stats</h3>
+              <h3 class="text-xl font-bold text-[#f0e8e8]">Team <span id="epa-modal-team">{selectedTeam.number}</span> Stats</h3>
               <button
                 id="epa-modal-close"
-                class="flex items-center justify-center w-8 h-8 rounded-[6px] bg-[#1e1e1e] hover:bg-[#2a2a2a] text-[#999] hover:text-[#e8e8e8] transition-colors"
+                class="flex items-center justify-center w-8 h-8 rounded-[6px] bg-[#2a1a1a] hover:bg-[#2a1a1a] text-[#9a7878] hover:text-[#f0e8e8] transition-colors"
                 onclick={() => (selectedTeam = null)}
                 aria-label="Close team stats"
               >
@@ -255,12 +255,12 @@
               </button>
             </div>
             <div class="space-y-3">
-              <div class="flex justify-between"><span class="text-[#999]">Total EPA:</span><span id="epa-modal-total" class="text-white font-bold">{round(selectedTeam.totalEpa)}</span></div>
-              <div class="flex justify-between"><span class="text-[#999]">Auto Points:</span><span id="epa-modal-auto" class="text-white font-bold">{round(selectedTeam.autoEpa)}</span></div>
-              <div class="flex justify-between"><span class="text-[#999]">Teleop Points:</span><span id="epa-modal-teleop" class="text-white font-bold">{round(selectedTeam.teleopEpa)}</span></div>
-              <div class="flex justify-between"><span class="text-[#999]">Endgame Points:</span><span id="epa-modal-endgame" class="text-white font-bold">{round(selectedTeam.endgameEpa)}</span></div>
-              <div class="flex justify-between pt-2 border-t border-[#1e1e1e]"><span class="text-[#999]">Rank:</span><span id="epa-modal-rank" class="text-white font-bold">{selectedTeam.rank === null ? "--" : `#${round(selectedTeam.rank, 0)}`}</span></div>
-              <div class="flex justify-between"><span class="text-[#999]">Percentile:</span><span id="epa-modal-percentile" class="text-white font-bold">{selectedTeam.percentile === null ? "--" : `${round(selectedTeam.percentile * 100, 1)}%`}</span></div>
+              <div class="flex justify-between"><span class="text-[#9a7878]">Total EPA:</span><span id="epa-modal-total" class="text-white font-bold">{round(selectedTeam.totalEpa)}</span></div>
+              <div class="flex justify-between"><span class="text-[#9a7878]">Auto Points:</span><span id="epa-modal-auto" class="text-white font-bold">{round(selectedTeam.autoEpa)}</span></div>
+              <div class="flex justify-between"><span class="text-[#9a7878]">Teleop Points:</span><span id="epa-modal-teleop" class="text-white font-bold">{round(selectedTeam.teleopEpa)}</span></div>
+              <div class="flex justify-between"><span class="text-[#9a7878]">Endgame Points:</span><span id="epa-modal-endgame" class="text-white font-bold">{round(selectedTeam.endgameEpa)}</span></div>
+              <div class="flex justify-between pt-2 border-t border-[#2a1a1a]"><span class="text-[#9a7878]">Rank:</span><span id="epa-modal-rank" class="text-white font-bold">{selectedTeam.rank === null ? "--" : `#${round(selectedTeam.rank, 0)}`}</span></div>
+              <div class="flex justify-between"><span class="text-[#9a7878]">Percentile:</span><span id="epa-modal-percentile" class="text-white font-bold">{selectedTeam.percentile === null ? "--" : `${round(selectedTeam.percentile * 100, 1)}%`}</span></div>
             </div>
           </div>
         </div>
@@ -270,19 +270,19 @@
 {/if}
 
 {#snippet allianceCard(title: string, alliance: "red" | "blue", teams: StatboticsTeamView[])}
-  <div class="bg-[#141414] border border-[#1e1e1e] rounded-[6px] p-4 md:p-6 mb-4">
+  <div class="bg-[#111111] border border-[#2a1a1a] rounded-[6px] p-4 md:p-6 mb-4">
     <h3 class="text-xl md:text-2xl font-bold mb-3 {alliance === 'red' ? 'text-[#c97070]' : 'text-[#6090c9]'}">{title}</h3>
     <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
       {#each teams as team, index (`${alliance}-${team.number}-${index}`)}
         <div
-          class="bg-[#111111] border border-[#1e1e1e] rounded-[6px] p-3 cursor-pointer hover:bg-[#1a1a1a] transition-colors"
+          class="bg-[#111111] border border-[#2a1a1a] rounded-[6px] p-3 cursor-pointer hover:bg-[#1a0f0f] transition-colors"
           data-team-index="{alliance}-{index + 1}"
           role="button"
           tabindex="0"
           onclick={() => { if (!team.unavailable) selectedTeam = team; }}
           onkeydown={(event) => { if ((event.key === "Enter" || event.key === " ") && !team.unavailable) selectedTeam = team; }}
         >
-          <div class="text-[#e8e8e8] text-base font-semibold mb-1">Team <span>{team.number}</span></div>
+          <div class="text-[#f0e8e8] text-base font-semibold mb-1">Team <span>{team.number}</span></div>
           <div class="text-2xl font-bold {alliance === 'red' ? 'text-[#c97070]' : 'text-[#6090c9]'}">
             <span>{team.unavailable ? "--" : round(team.totalEpa)}</span>
           </div>

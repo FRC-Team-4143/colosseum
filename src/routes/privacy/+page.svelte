@@ -3,12 +3,12 @@
   <meta name="description" content="Privacy policy for Colosseum." />
 </svelte:head>
 
-<main class="min-h-screen bg-slate-950 px-5 py-10 text-slate-100 sm:px-8">
+<main class="min-h-screen bg-[#0a0a0a] px-5 py-10 text-[#f0e8e8] sm:px-8">
   <article class="mx-auto max-w-3xl space-y-7 leading-7">
-    <a href="/" class="text-sm text-sky-400 hover:text-sky-300">← Colosseum</a>
+    <a href="/" class="text-sm text-[#e05540] hover:text-[#ff6644]">← Colosseum</a>
     <header class="space-y-2">
       <h1 class="text-3xl font-bold tracking-tight sm:text-4xl">Privacy Policy</h1>
-      <p class="text-sm text-slate-400">Effective August 31, 2026</p>
+      <p class="text-sm text-[#9a7878]">Effective August 31, 2026</p>
     </header>
 
     <p>
@@ -66,7 +66,7 @@
       <h2 class="text-xl font-semibold">Contact and changes</h2>
       <p>
         Questions about this policy can be raised with the Team 4143 software group or on the project’s
-        <a class="text-sky-400 hover:text-sky-300" href="https://github.com/FRC-Team-4143/colosseum" target="_blank" rel="noopener noreferrer">GitHub repository</a>.
+        <a class="text-[#e05540] hover:text-[#ff6644]" href="https://github.com/FRC-Team-4143/colosseum" target="_blank" rel="noopener noreferrer">GitHub repository</a>.
         This policy may be updated when the app changes; the revised version will be posted on this page.
       </p>
     </section>

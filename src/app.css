@@ -3,10 +3,43 @@
 @theme {
     --breakpoint-md: 60rem;
     --breakpoint-lg: 80rem;
+
+    /* MARS/WARS shared dark palette — matches Legion / Tempus / Munus. */
+    --color-mw-bg: #0a0a0a;
+    --color-mw-panel: #111111;
+    --color-mw-panel-header: #1a0f0f;
+    --color-mw-border: #2a1a1a;
+    --color-mw-row: #1e1010;
+    --color-mw-rule: #8b0000;
+    --color-mw-accent: #cc2200;
+    --color-mw-accent-hover: #aa1c00;
+    --color-mw-accent-active: #991900;
+    --color-mw-link: #e05540;
+    --color-mw-link-hover: #ff6644;
+    --color-mw-text: #f0e8e8;
+    --color-mw-muted: #9a7878;
+    --font-sans: "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
 }
 
 * {
     box-sizing: border-box;
+}
+
+::selection {
+    background: rgba(204, 34, 0, 0.35);
+}
+
+input,
+textarea,
+select {
+    caret-color: #cc2200;
+}
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+    outline: 2px solid rgba(204, 34, 0, 0.55);
+    outline-offset: -1px;
+    border-color: #cc2200 !important;
 }
 
 html,
@@ -29,14 +62,17 @@ body {
 
 body {
     font-size: 16px;
+    font-family: "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+    background: #0a0a0a;
+    color: #f0e8e8;
     -webkit-overflow-scrolling: touch;
     -webkit-text-size-adjust: 100%;
     text-size-adjust: 100%;
 }
 
 .btn-accent {
-    background: #ebebeb;
-    color: #0d0d0d;
+    background: #cc2200;
+    color: #ffffff;
     font-weight: 600;
     border: none;
     border-radius: 6px;
@@ -45,30 +81,30 @@ body {
     transition: background 0.15s ease, box-shadow 0.15s ease;
 }
 .btn-accent:hover {
-    background: #ffffff;
-    box-shadow: 0 0 12px rgba(255, 255, 255, 0.3);
+    background: #aa1c00;
+    box-shadow: 0 0 12px rgba(204, 34, 0, 0.4);
 }
 
 .btn-secondary {
-    background: #181818;
-    color: #999;
-    border: 1px solid #2a2a2a;
+    background: #1a0f0f;
+    color: #9a7878;
+    border: 1px solid #2a1a1a;
     border-radius: 6px;
     cursor: pointer;
     font-family: inherit;
     transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
 }
 .btn-secondary:hover {
-    background: #252525;
-    color: #e8e8e8;
-    border-color: #555;
-    box-shadow: 0 0 8px rgba(255, 255, 255, 0.07);
+    background: #241414;
+    color: #f0e8e8;
+    border-color: #5a3535;
+    box-shadow: 0 0 8px rgba(204, 34, 0, 0.14);
 }
 
 .mode-btn {
-    background: #181818;
-    color: #888;
-    border: 1px solid #2a2a2a;
+    background: #1a0f0f;
+    color: #9a7878;
+    border: 1px solid #2a1a1a;
     border-radius: 8px;
     cursor: pointer;
     font-family: inherit;
@@ -80,26 +116,26 @@ body {
     white-space: nowrap;
 }
 .mode-btn:hover {
-    background: #252525;
-    color: #e8e8e8;
-    border-color: #555;
-    box-shadow: 0 0 8px rgba(255, 255, 255, 0.07);
+    background: #241414;
+    color: #f0e8e8;
+    border-color: #5a3535;
+    box-shadow: 0 0 8px rgba(204, 34, 0, 0.14);
 }
 .mode-btn.mode-btn-active {
-    background: #ebebeb;
-    color: #0d0d0d;
-    border-color: #ebebeb;
+    background: #cc2200;
+    color: #ffffff;
+    border-color: #cc2200;
     font-weight: 700;
 }
 .mode-btn.mode-btn-active:hover {
-    background: #ffffff;
-    border-color: #ffffff;
-    box-shadow: 0 0 12px rgba(255, 255, 255, 0.3);
+    background: #aa1c00;
+    border-color: #aa1c00;
+    box-shadow: 0 0 12px rgba(204, 34, 0, 0.45);
 }
 
 .btn-danger {
     background: transparent;
-    color: #b87070;
+    color: #e0857a;
     border: 1px solid #4a2020;
     border-radius: 6px;
     cursor: pointer;
@@ -119,8 +155,8 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    background: #0d0d0d;
-    color: #e8e8e8;
+    background: #0a0a0a;
+    color: #f0e8e8;
     z-index: 99990;
     transition:
         opacity 220ms ease,
@@ -134,8 +170,8 @@ body {
 }
 
 #app-loading .loading-card {
-    background: #141414;
-    border: 1px solid #1e1e1e;
+    background: #111111;
+    border: 1px solid #2a1a1a;
     box-shadow: none;
     border-radius: 6px;
     padding: 24px 28px;
@@ -150,19 +186,20 @@ body {
     font-size: clamp(1.25rem, 3vw, 1.6rem);
     font-weight: 800;
     letter-spacing: 0.01em;
+    color: #cc2200;
 }
 
 #app-loading .loading-subtitle {
     font-size: clamp(0.95rem, 2.4vw, 1.1rem);
-    color: #999;
+    color: #9a7878;
 }
 
 #app-loading .loading-spinner {
     width: 48px;
     height: 48px;
     border-radius: 999px;
-    border: 4px solid rgba(148, 163, 184, 0.25);
-    border-top-color: #888;
+    border: 4px solid rgba(204, 34, 0, 0.2);
+    border-top-color: #cc2200;
     animation: app-loading-spin 1s linear infinite;
 }
 
@@ -429,7 +466,7 @@ body {
     width: 0%;
     height: 100%;
     border-radius: 999px;
-    background: linear-gradient(90deg, #4f46e5 0%, #06b6d4 60%);
+    background: linear-gradient(90deg, #991900 0%, #cc2200 55%, #e05540 100%);
     transition: width 300ms ease-out;
     position: relative;
     overflow: hidden;
@@ -682,8 +719,8 @@ body {
 }
 
 #home-match-list > div:hover {
-    background-color: #191919;
-    border-color: #333;
+    background-color: #1a0f0f;
+    border-color: #3a2020;
     box-shadow: none;
     transform: none;
     cursor: pointer;
@@ -696,7 +733,7 @@ body {
 .match-menu-btn {
     transition: background 0.15s ease, filter 0.2s ease;
     cursor: pointer;
-    color: #555;
+    color: #5a3535;
 }
 .match-menu-btn:hover {
     background: transparent;
@@ -709,18 +746,18 @@ body {
 }
 
 .match-menu-btn:hover .menu-dot {
-    background-color: #ffffff;
-    box-shadow: 0 0 8px rgba(255, 255, 255, 0.5);
-    filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.5));
+    background-color: #e05540;
+    box-shadow: 0 0 8px rgba(224, 85, 64, 0.5);
+    filter: drop-shadow(0 0 5px rgba(224, 85, 64, 0.5));
 }
 
 #whiteboard-draw-config {
     transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease, transform 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
 }
 #whiteboard-draw-config:hover {
-    background: #252525 !important;
-    border-color: #555 !important;
-    box-shadow: 0 0 8px rgba(255, 255, 255, 0.07);
+    background: #241414 !important;
+    border-color: #5a3535 !important;
+    box-shadow: 0 0 8px rgba(204, 34, 0, 0.14);
     cursor: pointer;
 }
 
@@ -778,9 +815,9 @@ body {
 
 #orientation-warning .dismiss-button {
     padding: 12px 24px;
-    background-color: #181818;
-    color: #999;
-    border: 1px solid #2a2a2a;
+    background-color: #1a0f0f;
+    color: #9a7878;
+    border: 1px solid #2a1a1a;
     border-radius: 8px;
     font-size: 16px;
     font-weight: 600;
@@ -789,9 +826,9 @@ body {
 }
 
 #orientation-warning .dismiss-button:hover {
-    background-color: #252525;
-    color: #e8e8e8;
-    border-color: #555;
+    background-color: #241414;
+    color: #f0e8e8;
+    border-color: #5a3535;
 }
 
 @keyframes rotateDevice {
@@ -1034,7 +1071,7 @@ body #whiteboard-statbotics-container {
 .tba-dropdown-item {
     padding: 10px 12px;
     cursor: pointer;
-    border-bottom: 1px solid #1e1e1e;
+    border-bottom: 1px solid #2a1a1a;
     transition: background-color 0.2s;
 }
 
@@ -1049,17 +1086,17 @@ body #whiteboard-statbotics-container {
 }
 
 .tba-dropdown-item:hover {
-    background-color: #1e1e1e;
+    background-color: #2a1a1a;
 }
 
 .tba-dropdown-item.selected {
-    background-color: #242424;
+    background-color: #241414;
 }
 
 .tba-event-name {
     font-size: 0.875rem;
     font-weight: 600;
-    color: #e8e8e8;
+    color: #f0e8e8;
     margin-bottom: 4px;
 }
 
@@ -1071,7 +1108,7 @@ body #whiteboard-statbotics-container {
 
 .tba-event-details {
     font-size: 0.75rem;
-    color: #888;
+    color: #9a7878;
 }
 
 @media (min-width: 640px) {
@@ -1083,11 +1120,11 @@ body #whiteboard-statbotics-container {
 .tba-team-item {
     padding: 10px 12px;
     cursor: pointer;
-    border-bottom: 1px solid #1e1e1e;
+    border-bottom: 1px solid #2a1a1a;
     transition: background-color 0.2s;
     text-align: center;
     font-size: 1rem;
-    color: #e8e8e8;
+    color: #f0e8e8;
 }
 
 @media (min-width: 640px) {
@@ -1102,11 +1139,11 @@ body #whiteboard-statbotics-container {
 }
 
 .tba-team-item:hover {
-    background-color: #1e1e1e;
+    background-color: #2a1a1a;
 }
 
 .tba-team-item.selected {
-    background-color: #242424;
+    background-color: #241414;
 }
 
 #tba-event-dropdown::-webkit-scrollbar,
@@ -1122,13 +1159,13 @@ body #whiteboard-statbotics-container {
 
 #tba-event-dropdown::-webkit-scrollbar-thumb,
 #tba-team-dropdown::-webkit-scrollbar-thumb {
-    background: #333;
+    background: #3a2020;
     border-radius: 4px;
 }
 
 #tba-event-dropdown::-webkit-scrollbar-thumb:hover,
 #tba-team-dropdown::-webkit-scrollbar-thumb:hover {
-    background: #444;
+    background: #5a3535;
 }
 
 #home-bottom-bar {
@@ -1140,12 +1177,12 @@ body #whiteboard-statbotics-container {
 }
 
 #home-bottom-bar a:hover {
-    color: #ffffff !important;
-    text-shadow: 0 0 8px rgba(255, 255, 255, 0.5);
+    color: #ff6644 !important;
+    text-shadow: 0 0 8px rgba(204, 34, 0, 0.5);
 }
 
 #home-bottom-bar a:hover i {
-    filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.5));
+    filter: drop-shadow(0 0 5px rgba(204, 34, 0, 0.5));
 }
 
 .overflow-y-auto {
@@ -1710,10 +1747,10 @@ a:active,
 
 #home-toolbar-logo:hover {
     text-shadow:
-        0 0 10px rgba(255, 255, 255, 0.8),
-        0 0 20px rgba(255, 255, 255, 0.6),
-        0 0 30px rgba(255, 255, 255, 0.4),
-        0 0 40px rgba(255, 255, 255, 0.2);
+        0 0 10px rgba(204, 34, 0, 0.8),
+        0 0 20px rgba(204, 34, 0, 0.6),
+        0 0 30px rgba(204, 34, 0, 0.4),
+        0 0 40px rgba(204, 34, 0, 0.2);
 }
 
 .special-team-digit {

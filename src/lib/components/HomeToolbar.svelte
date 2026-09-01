@@ -4,11 +4,11 @@
 
 <div
   id="home-toolbar"
-  class="flex items-center justify-between gap-3 w-full h-24 bg-[#111111] border-b border-[#1e1e1e] px-4 sm:px-6 md:px-10 lg:px-16 pt-[env(safe-area-inset-top)]"
+  class="flex items-center justify-between gap-3 w-full h-24 bg-[#111111] border-b border-[#2a1a1a] px-4 sm:px-6 md:px-10 lg:px-16 pt-[env(safe-area-inset-top)]"
 >
   <div
     id="home-toolbar-logo"
-    class="min-w-0 truncate text-lg sm:text-xl md:text-2xl font-bold text-[#e8e8e8] select-none cursor-pointer tracking-tight"
+    class="min-w-0 truncate text-lg sm:text-xl md:text-2xl font-extrabold text-[#cc2200] select-none cursor-pointer tracking-tight"
     onclick={() => location.reload()}
     role="button"
     tabindex="0"
@@ -22,7 +22,7 @@
   <div class="flex shrink-0 gap-2 sm:gap-2.5 md:gap-3 lg:gap-4 items-center">
     <button
       id="home-toolbar-new-btn"
-      class="flex items-center justify-center px-3 sm:px-4 md:px-6 lg:px-10 h-11 md:h-12 lg:h-14 btn-secondary text-sm sm:text-base md:text-lg lg:text-xl"
+      class="flex items-center justify-center px-3 sm:px-4 md:px-6 lg:px-10 h-11 md:h-12 lg:h-14 btn-accent text-sm sm:text-base md:text-lg lg:text-xl"
       onclick={onNew}
     >
       New

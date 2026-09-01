@@ -71,13 +71,13 @@
   id="qr-export-container"
   panelId="qr-export-inner-container"
   title="Export QR code"
-  panelClass="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center gap-3 w-11/12 sm:w-3/4 md:w-2/3 lg:w-1/2 max-w-2xl max-h-96 bg-[#141414] border border-[#1e1e1e] rounded-[6px] p-6 overflow-hidden"
+  panelClass="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center gap-3 w-11/12 sm:w-3/4 md:w-2/3 lg:w-1/2 max-w-2xl max-h-96 bg-[#111111] border border-[#2a1a1a] rounded-[6px] p-6 overflow-hidden"
   {onClose}
 >
   <div class="w-full flex justify-end">
     <button
       id="qr-export-close-btn"
-      class="flex items-center justify-center w-8 h-8 rounded-[6px] bg-[#1e1e1e] hover:bg-[#2a2a2a] text-[#999] hover:text-[#e8e8e8] transition-colors"
+      class="flex items-center justify-center w-8 h-8 rounded-[6px] bg-[#2a1a1a] hover:bg-[#2a1a1a] text-[#9a7878] hover:text-[#f0e8e8] transition-colors"
       title="Close export"
       onclick={onClose}
       aria-label="Close export"
@@ -93,7 +93,7 @@
     </div>
 
     {#if statusText || started}
-      <div id="qr-export-status" class="text-[#e8e8e8] font-semibold select-none">
+      <div id="qr-export-status" class="text-[#f0e8e8] font-semibold select-none">
         <span id="qr-export-status-text" aria-live="polite">
           {statusText || `Frame ${progress.frameIndex + 1} of ${progress.total}`}
         </span>

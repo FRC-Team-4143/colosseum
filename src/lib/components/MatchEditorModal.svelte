@@ -22,21 +22,21 @@
   id="{idPrefix}-container"
   layer=""
   title={editing ? "Edit match" : "New match"}
-  panelClass="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center justify-between w-11/12 sm:w-3/4 md:w-2/3 lg:w-1/2 max-w-2xl bg-[#141414] border border-[#1e1e1e] rounded-[6px] max-h-[90vh] overflow-y-auto"
+  panelClass="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center justify-between w-11/12 sm:w-3/4 md:w-2/3 lg:w-1/2 max-w-2xl bg-[#111111] border border-[#2a1a1a] rounded-[6px] max-h-[90vh] overflow-y-auto"
   {onClose}
 >
   <MatchForm bind:values {idPrefix} />
   <div class="flex w-full">
     <button
       id="{idPrefix}-{editing ? 'save' : 'create'}-btn"
-      class="w-1/2 text-center text-lg btn-secondary p-5 border-t border-[#1e1e1e] rounded-none"
+      class="w-1/2 text-center text-lg btn-accent p-5 border-t border-[#2a1a1a] rounded-none"
       onclick={() => onSave(values)}
     >
       {editing ? "Save" : "Create"}
     </button>
     <button
       id="{idPrefix}-cancel-btn"
-      class="w-1/2 text-center text-lg btn-secondary p-5 border-t border-[#1e1e1e] border-l border-l-[#1e1e1e] rounded-none"
+      class="w-1/2 text-center text-lg btn-secondary p-5 border-t border-[#2a1a1a] border-l border-l-[#2a1a1a] rounded-none"
       onclick={onClose}
     >
       Cancel

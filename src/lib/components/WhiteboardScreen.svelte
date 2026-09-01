@@ -127,7 +127,7 @@
     <div
       bind:this={toolbar}
       id="whiteboard-toolbar"
-      class="relative items-center w-full h-16 md:h-24 bg-[#111111] border-b border-[#1e1e1e] pt-[env(safe-area-inset-top)] {toolbarFit}"
+      class="relative items-center w-full h-16 md:h-24 bg-[#111111] border-b border-[#2a1a1a] pt-[env(safe-area-inset-top)] {toolbarFit}"
       style="z-index: 999"
     >
       <div bind:this={toolbarLeft} class="toolbar-left flex items-center ml-8 md:ml-14 gap-4">
@@ -175,7 +175,7 @@
     <div
       bind:this={container}
       id="whiteboard-wrapper"
-      class="w-full flex-1 min-h-0 m-0 p-0 bg-[#0d0d0d]"
+      class="w-full flex-1 min-h-0 m-0 p-0 bg-[#0a0a0a]"
       class:hidden={!ui.isCanvasVisible}
     >
       <canvas bind:this={background} id="whiteboard-canvas-background" width="3510" height="1610" class="absolute m-0 select-none touch-none"></canvas>
@@ -184,7 +184,7 @@
     </div>
 
     {#if !ui.isCanvasVisible}
-      <div id="whiteboard-statbotics-container" class="w-full flex-1 min-h-0 m-0 p-0 bg-[#0d0d0d] flex flex-col overflow-y-auto">
+      <div id="whiteboard-statbotics-container" class="w-full flex-1 min-h-0 m-0 p-0 bg-[#0a0a0a] flex flex-col overflow-y-auto">
         <StatboticsPanel match={app.activeMatch} visible={!ui.isCanvasVisible} />
       </div>
     {/if}
@@ -192,7 +192,7 @@
     {#if ui.isCanvasVisible}
       <div
         id="whiteboard-draw-config"
-        class="absolute flex flex-col justify-center items-center size-10 sm:size-12 md:size-14 lg:size-16 xl:size-20 bottom-3 sm:bottom-4 md:bottom-6 right-3 sm:right-4 md:right-6 bg-[#1a1a1a] border border-[#3a3a3a] rounded-full cursor-pointer"
+        class="absolute flex flex-col justify-center items-center size-10 sm:size-12 md:size-14 lg:size-16 xl:size-20 bottom-3 sm:bottom-4 md:bottom-6 right-3 sm:right-4 md:right-6 bg-[#1a0f0f] border border-[#3a2020] rounded-full cursor-pointer"
         role="button"
         tabindex="0"
         aria-label="Change tool"
@@ -206,7 +206,7 @@
 
       <div
         id="whiteboard-color-config"
-        class="absolute flex flex-col justify-center items-center bottom-3 sm:bottom-4 md:bottom-6 left-3 sm:left-4 md:left-6 bg-[#1a1a1a] border border-[#3a3a3a] rounded-full p-2 sm:p-3"
+        class="absolute flex flex-col justify-center items-center bottom-3 sm:bottom-4 md:bottom-6 left-3 sm:left-4 md:left-6 bg-[#1a0f0f] border border-[#3a2020] rounded-full p-2 sm:p-3"
         class:hidden={ui.tool === "eraser"}
         class:color-picker-hidden={paletteClosing}
       >
@@ -225,7 +225,7 @@
         {/each}
         <div
           id="whiteboard-color-close"
-          class="size-5 sm:size-6 md:size-8 lg:size-10 xl:size-12 m-1 sm:m-1.5 md:m-2 flex justify-center items-center text-center rounded-full border-2 border-[#3a3a3a] bg-[#2a2a2a] cursor-pointer"
+          class="size-5 sm:size-6 md:size-8 lg:size-10 xl:size-12 m-1 sm:m-1.5 md:m-2 flex justify-center items-center text-center rounded-full border-2 border-[#3a2020] bg-[#2a1a1a] cursor-pointer"
           class:hidden={!paletteOpen}
           role="button"
           tabindex="0"

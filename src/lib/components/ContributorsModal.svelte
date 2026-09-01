@@ -38,8 +38,8 @@
     revision += 1;
   }
 
-  const cardClass = "flex items-center gap-4 p-4 bg-[#141414] border border-[#1e1e1e] rounded-[6px] hover:bg-[#1a1a1a] transition-colors duration-200 cursor-pointer no-underline";
-  const teamCardClass = "flex items-center justify-center p-4 bg-[#141414] border border-[#1e1e1e] rounded-[6px] hover:bg-[#1a1a1a] transition-colors duration-200 cursor-default";
+  const cardClass = "flex items-center gap-4 p-4 bg-[#111111] border border-[#2a1a1a] rounded-[6px] hover:bg-[#1a0f0f] transition-colors duration-200 cursor-pointer no-underline";
+  const teamCardClass = "flex items-center justify-center p-4 bg-[#111111] border border-[#2a1a1a] rounded-[6px] hover:bg-[#1a0f0f] transition-colors duration-200 cursor-default";
   const donatorStyle = "background: linear-gradient(145deg, #d4a44a, #b8860b, #d4a44a, #f0d68a, #d4a44a); background-size: 300% 100%; border: 3px solid #f0d68a; box-shadow: inset 0 2px 4px rgba(255,248,220,0.4), inset 0 -2px 4px rgba(0,0,0,0.3), 0 4px 12px rgba(0,0,0,0.4); transition: background-position 0.8s ease; background-position: 0% 0%;";
 </script>
 
@@ -48,14 +48,14 @@
   id="contributors-container"
   panelId="contributors-inner-container"
   title="Contributors"
-  panelClass="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center w-11/12 sm:w-5/6 md:w-4/5 lg:w-3/4 max-w-6xl bg-[#141414] border border-[#1e1e1e] rounded-[6px] max-h-[90vh] overflow-hidden"
+  panelClass="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center w-11/12 sm:w-5/6 md:w-4/5 lg:w-3/4 max-w-6xl bg-[#111111] border border-[#2a1a1a] rounded-[6px] max-h-[90vh] overflow-hidden"
   {onClose}
 >
-  <div class="w-full px-6 py-4 flex justify-between items-center bg-[#111111] border-b border-[#1e1e1e]">
-    <h2 class="text-base text-[#e8e8e8] font-semibold">Contributors</h2>
+  <div class="w-full px-6 py-4 flex justify-between items-center bg-[#111111] border-b border-[#2a1a1a]">
+    <h2 class="text-base text-[#f0e8e8] font-semibold">Contributors</h2>
     <button
       id="contributors-close-btn"
-      class="flex items-center justify-center w-8 h-8 rounded-[6px] bg-[#1e1e1e] hover:bg-[#2a2a2a] text-[#999] hover:text-[#e8e8e8] transition-colors"
+      class="flex items-center justify-center w-8 h-8 rounded-[6px] bg-[#2a1a1a] hover:bg-[#2a1a1a] text-[#9a7878] hover:text-[#f0e8e8] transition-colors"
       onclick={onClose}
       aria-label="Close contributors"
     >
@@ -67,7 +67,7 @@
     {#if loading}
       <div id="contributors-loading" class="flex flex-col items-center justify-center h-full">
         <div class="loading-spinner mb-4"></div>
-        <p class="text-[#666] text-base">Loading contributors...</p>
+        <p class="text-[#7a5a5a] text-base">Loading contributors...</p>
       </div>
     {:else if failed}
       <div id="contributors-error" class="flex flex-col items-center justify-center h-full">
@@ -83,14 +83,14 @@
                 <img
                   src="{contributor.avatar_url}?s=128"
                   alt={contributor.login}
-                  class="w-16 h-16 rounded-full border-2 border-[#2a2a2a]"
+                  class="w-16 h-16 rounded-full border-2 border-[#2a1a1a]"
                   style="image-rendering: -webkit-optimize-contrast; image-rendering: crisp-edges; backface-visibility: hidden; transform: translateZ(0); will-change: transform;"
                 />
               </div>
               <div class="grow min-w-0">
-                <div class="contributor-name text-lg font-bold text-[#e8e8e8] truncate">{contributor.name || contributor.login}</div>
-                <p class="text-sm text-[#666] truncate">@{contributor.login}</p>
-                {#if contributor.bio}<p class="text-sm text-[#999] mt-1 line-clamp-2">{contributor.bio}</p>{/if}
+                <div class="contributor-name text-lg font-bold text-[#f0e8e8] truncate">{contributor.name || contributor.login}</div>
+                <p class="text-sm text-[#7a5a5a] truncate">@{contributor.login}</p>
+                {#if contributor.bio}<p class="text-sm text-[#9a7878] mt-1 line-clamp-2">{contributor.bio}</p>{/if}
               </div>
             </a>
           {/each}
@@ -99,13 +99,13 @@
           {#each teams as team (team)}
             <div class={teamCardClass}>
               <div class="text-center">
-                <div class="text-lg font-bold text-[#e8e8e8]">Team {team}</div>
+                <div class="text-lg font-bold text-[#f0e8e8]">Team {team}</div>
               </div>
             </div>
           {/each}
         </div>
 
-        <h3 class="text-base text-[#e8e8e8] font-semibold pt-4">Donators</h3>
+        <h3 class="text-base text-[#f0e8e8] font-semibold pt-4">Donators</h3>
         <div id="donators-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {#each DONATORS as donator (donator.name)}
             <div class="donator-card flex flex-col items-center justify-center p-6 rounded-[6px] transition-all duration-300 cursor-default relative overflow-hidden" style={donatorStyle}>
@@ -127,7 +127,7 @@
     transition: color 200ms;
   }
   :global(a:hover > div > .contributor-name) {
-    color: #aaa;
+    color: #b09a9a;
   }
   .donator-card:hover {
     background-position: 100% 0% !important;

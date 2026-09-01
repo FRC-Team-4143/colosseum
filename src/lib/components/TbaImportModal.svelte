@@ -96,10 +96,10 @@
   id="tba-import-container"
   layer=""
   title="Import from The Blue Alliance"
-  panelClass="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center justify-between w-11/12 sm:w-3/4 md:w-2/3 lg:w-1/2 max-w-2xl bg-[#141414] border border-[#1e1e1e] rounded-[6px] max-h-[90vh] overflow-hidden"
+  panelClass="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center justify-between w-11/12 sm:w-3/4 md:w-2/3 lg:w-1/2 max-w-2xl bg-[#111111] border border-[#2a1a1a] rounded-[6px] max-h-[90vh] overflow-hidden"
   {onClose}
 >
-  <div class="w-full px-6 py-4 text-base text-center text-[#e8e8e8] font-semibold flex-shrink-0 bg-[#111111] border-b border-[#1e1e1e]">
+  <div class="w-full px-6 py-4 text-base text-center text-[#f0e8e8] font-semibold flex-shrink-0 bg-[#111111] border-b border-[#2a1a1a]">
     Import from The Blue Alliance
   </div>
   <div class="w-full flex-1 overflow-y-auto">
@@ -108,15 +108,15 @@
         id="tba-api-key"
         placeholder="TBA API Key (optional)"
         type="password"
-        class="w-full p-3 text-sm text-center text-[#e8e8e8] rounded-[6px] bg-[#0d0d0d] border border-[#2a2a2a] outline-0"
+        class="w-full p-3 text-sm text-center text-[#f0e8e8] rounded-[6px] bg-[#0a0a0a] border border-[#2a1a1a] outline-0"
         autocomplete="off"
         autocapitalize="off"
         spellcheck="false"
         bind:value={apiKey}
       />
-      <div class="text-xs text-[#999] text-center mt-2">
+      <div class="text-xs text-[#9a7878] text-center mt-2">
         {hasApiKey ? "Using your saved API key." : "Using shared API key."} Add your own at
-        <a href="https://www.thebluealliance.com/account" target="_blank" rel="noreferrer" class="text-[#60a5fa] underline">thebluealliance.com/account</a>
+        <a href="https://www.thebluealliance.com/account" target="_blank" rel="noreferrer" class="text-[#e05540] underline">thebluealliance.com/account</a>
         for higher rate limits
       </div>
     </div>
@@ -124,7 +124,7 @@
       <input
         id="tba-event-search"
         placeholder="Search events..."
-        class="w-full p-3 text-sm text-center text-[#e8e8e8] rounded-[6px] bg-[#0d0d0d] border border-[#2a2a2a] outline-0"
+        class="w-full p-3 text-sm text-center text-[#f0e8e8] rounded-[6px] bg-[#0a0a0a] border border-[#2a1a1a] outline-0"
         autocomplete="off"
         autocapitalize="off"
         spellcheck="false"
@@ -133,7 +133,7 @@
         oninput={() => (eventOpen = true)}
       />
       {#if eventOpen && filteredEvents.length}
-        <div id="tba-event-dropdown" class="absolute top-full left-6 right-6 mt-1 bg-[#141414] border border-[#1e1e1e] rounded-[6px] max-h-64 overflow-y-auto z-50">
+        <div id="tba-event-dropdown" class="absolute top-full left-6 right-6 mt-1 bg-[#111111] border border-[#2a1a1a] rounded-[6px] max-h-64 overflow-y-auto z-50">
           <div id="tba-event-list" class="flex flex-col">
             {#each filteredEvents as event (event.key)}
               <div
@@ -157,7 +157,7 @@
         id="tba-team-search"
         placeholder={eventKey ? "Search teams..." : "Select event first..."}
         disabled={!eventKey}
-        class="w-full p-3 text-sm text-center text-[#e8e8e8] rounded-[6px] bg-[#0d0d0d] border border-[#2a2a2a] outline-0 disabled:opacity-40"
+        class="w-full p-3 text-sm text-center text-[#f0e8e8] rounded-[6px] bg-[#0a0a0a] border border-[#2a1a1a] outline-0 disabled:opacity-40"
         autocomplete="off"
         autocapitalize="off"
         spellcheck="false"
@@ -166,7 +166,7 @@
         oninput={() => (teamOpen = true)}
       />
       {#if teamOpen && eventKey}
-        <div id="tba-team-dropdown" class="absolute top-full left-6 right-6 mt-1 bg-[#141414] border border-[#1e1e1e] rounded-[6px] max-h-64 overflow-y-auto z-50">
+        <div id="tba-team-dropdown" class="absolute top-full left-6 right-6 mt-1 bg-[#111111] border border-[#2a1a1a] rounded-[6px] max-h-64 overflow-y-auto z-50">
           <div id="tba-team-list" class="flex flex-col">
             {#each filteredTeams as team (team)}
               <div
@@ -181,14 +181,14 @@
               </div>
             {/each}
           </div>
-          <button id="tba-all-matches-btn" class="w-full p-3 text-sm text-center btn-secondary border-t border-[#2a2a2a] rounded-none" onclick={selectAllMatches}>
+          <button id="tba-all-matches-btn" class="w-full p-3 text-sm text-center btn-secondary border-t border-[#2a1a1a] rounded-none" onclick={selectAllMatches}>
             All Matches
           </button>
         </div>
       {/if}
     </div>
     {#if status}
-      <div id="tba-status-message" class="w-full px-8 pb-4 text-center {status.isError ? 'text-[#b87070]' : 'text-[#999]'}">
+      <div id="tba-status-message" class="w-full px-8 pb-4 text-center {status.isError ? 'text-[#e0857a]' : 'text-[#9a7878]'}">
         {status.message}
       </div>
     {/if}
@@ -196,14 +196,14 @@
   <div class="flex w-full flex-shrink-0">
     <button
       id="tba-import-btn"
-      class="w-1/2 text-center text-sm btn-secondary p-4 border-t border-[#1e1e1e] rounded-none rounded-bl-[6px]"
+      class="w-1/2 text-center text-sm btn-secondary p-4 border-t border-[#2a1a1a] rounded-none rounded-bl-[6px]"
       onclick={() => void submit()}
     >
       Import
     </button>
     <button
       id="tba-cancel-btn"
-      class="w-1/2 text-center text-sm btn-secondary p-4 border-t border-[#1e1e1e] border-l border-l-[#1e1e1e] rounded-none"
+      class="w-1/2 text-center text-sm btn-secondary p-4 border-t border-[#2a1a1a] border-l border-l-[#2a1a1a] rounded-none"
       onclick={onClose}
     >
       Cancel
