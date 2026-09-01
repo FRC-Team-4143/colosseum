@@ -7,8 +7,6 @@
 
   const FIRST_YEAR = 2025;
 
-  let apiKey = $state("");
-  let hasApiKey = $state(false);
   let events = $state<TbaSimpleEvent[]>([]);
   let eventSearch = $state("");
   let eventKey = $state("");
@@ -27,7 +25,6 @@
   $effect(() => {
     if (!open) return;
     status = null;
-    void native.tba.hasApiKey().then((value) => (hasApiKey = value), () => (hasApiKey = false));
     void loadEvents();
   });
 
@@ -79,10 +76,6 @@
     }
     status = { message: "Importing matches...", isError: false };
     try {
-      if (apiKey.trim()) {
-        await native.tba.setApiKey(apiKey.trim());
-        hasApiKey = true;
-      }
       await onImport(eventKey, teamNumber);
       status = null;
     } catch {
@@ -103,24 +96,7 @@
     Import from The Blue Alliance
   </div>
   <div class="w-full flex-1 overflow-y-auto">
-    <div class="w-full px-6 pt-4 pb-4">
-      <input
-        id="tba-api-key"
-        placeholder="TBA API Key (optional)"
-        type="password"
-        class="w-full p-3 text-sm text-center text-[#f0e8e8] rounded-[6px] bg-[#0a0a0a] border border-[#2a1a1a] outline-0"
-        autocomplete="off"
-        autocapitalize="off"
-        spellcheck="false"
-        bind:value={apiKey}
-      />
-      <div class="text-xs text-[#9a7878] text-center mt-2">
-        {hasApiKey ? "Using your saved API key." : "Using shared API key."} Add your own at
-        <a href="https://www.thebluealliance.com/account" target="_blank" rel="noreferrer" class="text-[#e05540] underline">thebluealliance.com/account</a>
-        for higher rate limits
-      </div>
-    </div>
-    <div class="w-full px-6 pb-4 relative">
+    <div class="w-full px-6 pt-4 pb-4 relative">
       <input
         id="tba-event-search"
         placeholder="Search events..."

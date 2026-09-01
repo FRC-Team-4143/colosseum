@@ -9,17 +9,16 @@ import { platformCommands } from "./platform";
 import { qrCommands } from "./qr";
 import { searchCommands } from "./search";
 import { storageCommands } from "./storage";
+import { tbaCommands } from "./tba";
 
 /**
  * Browser implementations of the native (Tauri) command surface, used by the
  * static web build where there is no Rust backend.
  *
  * This module is only imported when `isTauri()` is false (see `../api.ts`), so
- * it is code-split out of the desktop bundle entirely. Ported so far:
- *   - Phase 1: config, field, platform, storage, board
- *   - Phase 2: model_*, match_* (packet codec), qr_*, pdf_*, fuzzy_*
- * Still pending (throw until ported):
- *   - Phase 3: tba, statbotics, github
+ * it is code-split out of the desktop bundle entirely. It implements the whole
+ * command surface: config, field, platform, storage, board, model_*, match_*,
+ * qr_*, pdf_*, fuzzy_*, and tba_*.
  */
 export type WebCommandHandler = (args: Record<string, unknown>) => unknown | Promise<unknown>;
 
@@ -34,6 +33,7 @@ export const webCommands: Record<string, WebCommandHandler> = {
   ...qrCommands,
   ...pdfCommands,
   ...searchCommands,
+  ...tbaCommands,
 };
 
 function toArgRecord(args: InvokeArgs | undefined): Record<string, unknown> {
