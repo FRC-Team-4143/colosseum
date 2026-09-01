@@ -55,13 +55,17 @@ describe("native command routing", () => {
   it("routes to the web implementation and never touches invoke when there is no backend", async () => {
     isTauriMock.mockReturnValue(false);
 
-    await expect(native.config.current()).rejects.toThrow(/web build yet/);
+    const config = await native.config.current();
+
+    expect(config).toMatchObject({ fieldPngPixelWidth: 3510 });
     expect(invokeMock).not.toHaveBeenCalled();
   });
 
-  it("still wraps web-side failures in NativeCommandError", async () => {
+  it("wraps an unported web command's error in NativeCommandError with a clear message", async () => {
     isTauriMock.mockReturnValue(false);
 
-    await expect(native.config.current()).rejects.toBeInstanceOf(NativeCommandError);
+    await expect(native.model.loadPackets()).rejects.toBeInstanceOf(NativeCommandError);
+    await expect(native.model.loadPackets()).rejects.toThrow(/web build yet/);
+    expect(invokeMock).not.toHaveBeenCalled();
   });
 });

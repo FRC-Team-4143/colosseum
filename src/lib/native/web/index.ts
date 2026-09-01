@@ -1,21 +1,32 @@
 import type { InvokeArgs } from "@tauri-apps/api/core";
 
+import { boardCommands } from "./board";
+import { configCommands } from "./config";
+import { fieldCommands } from "./field";
+import { platformCommands } from "./platform";
+import { storageCommands } from "./storage";
+
 /**
  * Browser implementations of the native (Tauri) command surface, used by the
  * static web build where there is no Rust backend.
  *
  * This module is only imported when `isTauri()` is false (see `../api.ts`), so
- * it is code-split out of the desktop bundle entirely. It is filled in over
- * phases:
+ * it is code-split out of the desktop bundle entirely. Ported so far:
  *   - Phase 1: config, field, platform, storage, board
- *   - Phase 2: qr, pdf, fuzzy search
+ * Still pending (throw until ported):
+ *   - Phase 2: model, matches, qr, pdf, fuzzy search
  *   - Phase 3: tba, statbotics, github
- * Until a command is ported here it throws, rather than resolving to undefined.
  */
 export type WebCommandHandler = (args: Record<string, unknown>) => unknown | Promise<unknown>;
 
-/** command name -> browser implementation. Populated by the phase modules. */
-export const webCommands: Record<string, WebCommandHandler> = {};
+/** command name -> browser implementation. */
+export const webCommands: Record<string, WebCommandHandler> = {
+  ...configCommands,
+  ...fieldCommands,
+  ...platformCommands,
+  ...storageCommands,
+  ...boardCommands,
+};
 
 function toArgRecord(args: InvokeArgs | undefined): Record<string, unknown> {
   return args && typeof args === "object" && !Array.isArray(args)
