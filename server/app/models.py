@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Optional
 
-from sqlalchemy import Boolean, DateTime, Integer, String, Text
+from sqlalchemy import Boolean, DateTime, Integer, String, Text, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.database import Base
@@ -38,3 +38,18 @@ class TbaCache(Base):
     endpoint: Mapped[str] = mapped_column(String(255), primary_key=True)
     payload: Mapped[str] = mapped_column(Text, nullable=False)
     fetched_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.utcnow)
+
+
+class TeamNote(Base):
+    """A free-text scouting note about a team at an event. Shared by everyone at that
+    event (keyed by event + team, not by workspace); last write wins."""
+    __tablename__ = "team_notes"
+    __table_args__ = (UniqueConstraint("event_key", "team", name="uq_team_note"),)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    event_key: Mapped[str] = mapped_column(String(20), nullable=False, index=True)
+    team: Mapped[int] = mapped_column(Integer, nullable=False)
+    body: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    updated_by: Mapped[str] = mapped_column(String(120), nullable=False, default="")
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow
+    )

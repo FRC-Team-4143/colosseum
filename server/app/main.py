@@ -7,7 +7,7 @@ from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db, init_db
-from app.routers import auth, meta, tba
+from app.routers import auth, meta, notes, tba
 from app.services.scheduler import create_scheduler
 
 # The built SvelteKit SPA. In the Docker image it sits at /app/static (next to the app
@@ -32,6 +32,7 @@ app = FastAPI(title="Colosseum", lifespan=lifespan)
 app.include_router(auth.router)
 app.include_router(tba.router)
 app.include_router(meta.router)
+app.include_router(notes.router)
 
 
 @app.get("/health")

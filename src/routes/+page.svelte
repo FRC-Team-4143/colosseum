@@ -15,6 +15,8 @@
   import QrExportModal from "$lib/components/QrExportModal.svelte";
   import ReleaseAnnouncementModal from "$lib/components/ReleaseAnnouncementModal.svelte";
   import ScheduleView from "$lib/components/ScheduleView.svelte";
+  import TeamDetail from "$lib/components/TeamDetail.svelte";
+  import TeamsTable from "$lib/components/TeamsTable.svelte";
   import WhiteboardScreen from "$lib/components/WhiteboardScreen.svelte";
   import type { Match, MatchFormValues } from "$lib/components/types";
   import type { MatchPacket, ReleaseAnnouncement, StrategyMatch } from "$lib/native/types";
@@ -111,6 +113,10 @@
     if (releaseAnnouncement) await dismissRelease(releaseAnnouncement.id, releaseAnnouncement.showOnce);
     releaseOpen = false;
   }
+
+  function addToPicklist(_team: number) {
+    notice("The pick list arrives in the next update.");
+  }
 </script>
 
 <svelte:head><title>Colosseum</title><meta name="description" content="Event scouting hub for FRC Teams 4143 and 4423 (MARS/WARS)" /></svelte:head>
@@ -159,8 +165,15 @@
               </div>
             </div>
           {/if}
-        {:else if app.screen === "teams" || app.screen === "team"}
-          <div class="placeholder">Team stats land in the next update.</div>
+        {:else if app.screen === "teams"}
+          <TeamsTable onAddToPicklist={addToPicklist} />
+        {:else if app.screen === "team" && app.selectedTeam !== null}
+          <TeamDetail
+            team={app.selectedTeam}
+            onNotice={notice}
+            onBack={() => (app.screen = "teams")}
+            onAddToPicklist={addToPicklist}
+          />
         {:else if app.screen === "picklist"}
           <div class="placeholder">The pick list lands in the next update.</div>
         {/if}

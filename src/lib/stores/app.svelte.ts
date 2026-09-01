@@ -10,6 +10,7 @@ export type Screen = "schedule" | "teams" | "team" | "picklist" | "whiteboard";
 let screen = $state<Screen>("schedule");
 let packets = $state<MatchPacket[]>([]);
 let activeMatchId = $state<string | null>(null);
+let selectedTeam = $state<number | null>(null);
 let loading = $state(true);
 let saving = $state(false);
 let initialized = false;
@@ -97,14 +98,21 @@ async function createMatch(inputOrName: CreateMatchInput | string, red?: readonl
 export const app = {
   get screen(): Screen { return screen; },
   /** Direct navigation between the hub screens. `whiteboard` and `team` are entered
-   * through `openMatch*` / a team selection, not this setter. */
+   * through `openMatch*` / `openTeam`, not this setter. */
   set screen(next: Screen) { screen = next; },
+
+  /** Open the per-team detail screen. */
+  openTeam(team: number): void {
+    selectedTeam = team;
+    screen = "team";
+  },
   get matches(): StrategyMatch[] { return packets.map(project); },
   get activeMatch(): StrategyMatch | null {
     const packet = activeMatchId === null ? undefined : packets.find((item) => item[7] === activeMatchId);
     return packet ? project(packet) : null;
   },
   get activeMatchId(): string | null { return activeMatchId; },
+  get selectedTeam(): number | null { return selectedTeam; },
   get loading(): boolean { return loading; },
   get saving(): boolean { return saving; },
 
