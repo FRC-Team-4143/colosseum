@@ -130,7 +130,7 @@ export class WhiteboardController {
   getMatch(): WhiteboardMatch | null { return this.match; }
   /** Field artwork year in use; phase labels differ from 2026 onward. */
   getCurrentFieldYear(): number | undefined { return this.fieldYear(); }
-  getState(): WhiteboardState { return { mode: this.mode, tool: this.tool, color: this.color, view: this.view, canUndo: this.canUndo(), canRedo: this.canRedo(), isCanvasVisible: this.mode !== "statbotics" }; }
+  getState(): WhiteboardState { return { mode: this.mode, tool: this.tool, color: this.color, view: this.view, canUndo: this.canUndo(), canRedo: this.canRedo() }; }
   setMode(mode: WhiteboardMode): void {
     if (this.mode === mode) return;
     this.mode = mode; this.selected = null; this.pointer = null;
@@ -164,7 +164,7 @@ export class WhiteboardController {
     event.preventDefault(); if (event.shiftKey) this.redo(); else this.undo();
   };
   private readonly onPointerDown = (event: PointerEvent): void => {
-    if (!this.refs || !this.match || this.mode === "statbotics") return;
+    if (!this.refs || !this.match) return;
     if (event.pointerType === "pen") {
       this.penActive = true;
       this.lastPenAt = event.timeStamp;
@@ -246,8 +246,8 @@ export class WhiteboardController {
     } else if (pointer.erased.strokes.length || pointer.erased.checkboxes.length) this.record(pointer.erased, "erase");
   };
 
-  private dataMode(): BoardPhaseName | null { return this.mode === "statbotics" ? null : this.mode; }
-  private phase(): WhiteboardPhase | null { return this.match && this.dataMode() ? phaseFor(this.match, this.dataMode()!) : null; }
+  private dataMode(): BoardPhaseName { return this.mode; }
+  private phase(): WhiteboardPhase | null { return this.match ? phaseFor(this.match, this.mode) : null; }
   private history(store: Map<BoardPhaseName, Action[]>, mode: BoardPhaseName): Action[] { let values = store.get(mode); if (!values) { values = []; store.set(mode, values); } return values; }
   private record(action: Action, reason: WhiteboardCommit["reason"]): void { const mode = this.dataMode(); if (!mode) return; const undo = this.history(this.undoHistory, mode); undo.push(action); if (undo.length > MAX_HISTORY) undo.shift(); this.redoHistory.set(mode, []); this.commit(reason); }
   private commit(reason: WhiteboardCommit["reason"]): void { const mode = this.dataMode(); if (this.match && mode) void this.options.onCommit?.({ match: this.match, mode, reason }); this.emitState(); }
@@ -311,7 +311,7 @@ export class WhiteboardController {
   }
   private drawNotesGrid(context: CanvasRenderingContext2D): void { context.fillStyle = "#000"; context.fillRect(0, 0, FIELD_WIDTH, FIELD_HEIGHT); context.strokeStyle = "rgba(255,255,255,.2)"; context.lineWidth = 1; for (let x = 0; x < FIELD_WIDTH; x += 100) { context.beginPath(); context.moveTo(x, 0); context.lineTo(x, FIELD_HEIGHT); context.stroke(); } for (let y = 0; y < FIELD_HEIGHT; y += 100) { context.beginPath(); context.moveTo(0, y); context.lineTo(FIELD_WIDTH, y); context.stroke(); } }
   private drawItems(): void {
-    const context = this.contexts?.items; const phase = this.phase(); if (!context) return; context.clearRect(0, 0, FIELD_WIDTH, FIELD_HEIGHT); if (!phase || this.mode === "notes" || this.mode === "statbotics") return;
+    const context = this.contexts?.items; const phase = this.phase(); if (!context) return; context.clearRect(0, 0, FIELD_WIDTH, FIELD_HEIGHT); if (!phase || this.mode === "notes") return;
     for (const slot of slots) this.drawRobot(context, slot, phase[`${slot}Robot`]);
   }
   private drawRobot(context: CanvasRenderingContext2D, slot: Slot, robot: RobotPosition): void {
@@ -323,7 +323,7 @@ export class WhiteboardController {
     context.restore();
   }
   private redrawDrawing(): void {
-    const context = this.contexts?.drawing; const phase = this.phase(); if (!context) return; context.clearRect(0, 0, FIELD_WIDTH, FIELD_HEIGHT); if (!phase || this.mode === "statbotics") return;
+    const context = this.contexts?.drawing; const phase = this.phase(); if (!context) return; context.clearRect(0, 0, FIELD_WIDTH, FIELD_HEIGHT); if (!phase) return;
     for (const stroke of phase.drawing) this.drawStroke(context, stroke);
     for (const checkbox of phase.checkboxes ?? []) this.drawCheckbox(context, checkbox);
   }

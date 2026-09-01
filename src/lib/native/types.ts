@@ -6,7 +6,7 @@ export interface JsonObject {
 }
 
 export type Alliance = readonly [string, string, string];
-export type BoardMode = "auto" | "teleop" | "transition" | "endgame" | "notes" | "statbotics";
+export type BoardMode = "auto" | "teleop" | "transition" | "endgame" | "notes";
 export type BoardTool = "marker" | "eraser";
 
 export interface BoardState {
@@ -99,15 +99,6 @@ export interface TbaSimpleMatch {
   match_key: string;
 }
 
-export interface Contributor {
-  login: string;
-  avatar_url: string;
-  html_url: string;
-  contributions: number;
-  name: string | null;
-  bio: string | null;
-}
-
 export interface QrReceivingProgress {
   status: "receiving";
   received: number;
@@ -183,32 +174,4 @@ export interface NativeConfig {
   /** Never render this value or expose it beyond the native call boundary. */
   sharedTbaApiKey: string | null;
   releaseAnnouncement: ReleaseAnnouncement;
-}
-
-export interface StatboticsMatch {
-  key: string;
-  year: number;
-  event: string;
-  comp_level: string;
-  set_number: number;
-  match_number: number;
-  match_name: string;
-  time: number | null;
-  status: string | null;
-  pred: JsonObject | null;
-  result: JsonObject | null;
-}
-export interface StatboticsYear { year: number; percentiles: JsonObject | null; }
-export interface StatboticsTeamYear {
-  team: number;
-  year: number;
-  name: string | null;
-  country: string | null;
-  state: string | null;
-  district: string | null;
-  rookie_year: number | null;
-  epa: JsonObject | null;
-  record: JsonObject | null;
-  district_points: number | null;
-  district_rank: number | null;
 }

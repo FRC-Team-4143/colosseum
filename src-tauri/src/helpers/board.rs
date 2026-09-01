@@ -9,7 +9,6 @@ pub enum BoardMode {
     Transition,
     Endgame,
     Notes,
-    Statbotics,
 }
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
@@ -210,7 +209,6 @@ mod tests {
             BoardMode::Transition,
             BoardMode::Endgame,
             BoardMode::Notes,
-            BoardMode::Statbotics,
         ] {
             board.set_mode(mode);
             assert_eq!(board.state().mode, mode);

@@ -1,10 +1,9 @@
 import { invoke, isTauri, type InvokeArgs } from "@tauri-apps/api/core";
 
 import type {
-  BoardMode, BoardState, BoardTool, Contributor, CreateMatchInput, FieldRobotPositions,
+  BoardMode, BoardState, BoardTool, CreateMatchInput, FieldRobotPositions,
   FuzzyBatchItem, FuzzyBatchMatch, FuzzyMatchResult, JsonValue, MatchPacket, NativeConfig,
-  PdfDocumentPlan, QrProgress, StatboticsMatch, StatboticsTeamYear, StatboticsYear, TbaEvent,
-  TbaMatch, TbaSimpleEvent, TbaSimpleMatch,
+  PdfDocumentPlan, QrProgress, TbaEvent, TbaMatch, TbaSimpleEvent, TbaSimpleMatch,
 } from "./types";
 
 export class NativeCommandError extends Error {
@@ -85,20 +84,6 @@ export const native = {
     teamsAtEvent: (eventKey: string) => call<string[]>("tba_teams_at_event", { eventKey }),
     simpleEvents: (events: TbaEvent[]) => call<TbaSimpleEvent[]>("tba_simple_events", { events }),
     simpleMatches: (matches: TbaMatch[]) => call<TbaSimpleMatch[]>("tba_simple_matches", { matches }),
-  },
-  statbotics: {
-    cached: (matchKey: string) => call<JsonValue | null>("statbotics_cached", { matchKey }),
-    cacheTimestamp: (matchKey: string) => call<number | null>("statbotics_cache_timestamp", { matchKey }),
-    clearCache: () => call<number>("statbotics_clear_cache"),
-    fetch: (endpoint: string) => call<JsonValue>("statbotics_fetch", { endpoint }),
-    matchKey: (eventKey: string, matchName: string) => call<string>("statbotics_match_key", { eventKey, matchName }),
-    match: (matchKey: string) => call<StatboticsMatch>("statbotics_match", { matchKey }),
-    year: (year: number) => call<StatboticsYear>("statbotics_year", { year }),
-    teamYear: (team: number, year: number) => call<StatboticsTeamYear>("statbotics_team_year", { team, year }),
-  },
-  github: {
-    teams: () => call<string[]>("github_teams"),
-    contributors: (count?: number) => call<Contributor[]>("github_contributors", { count }),
   },
   qr: {
     encode: (payload: string) => call<string[]>("qr_encode", { payload }),

@@ -1021,44 +1021,6 @@ body {
     }
 }
 
-body #whiteboard-statbotics-container {
-    overflow-y: auto;
-    overflow-x: hidden;
-}
-
-#statbotics-data-container {
-    overflow: visible;
-}
-
-[data-team-index] {
-    transition: all 0.2s ease;
-}
-
-[data-team-index]:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-}
-
-#epa-details-modal {
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-}
-
-#epa-details-modal > div {
-    animation: modalFadeIn 0.1s ease-out;
-}
-
-@keyframes modalFadeIn {
-    from {
-        opacity: 0;
-        transform: scale(0.95);
-    }
-    to {
-        opacity: 1;
-        transform: scale(1);
-    }
-}
-
 .backdrop-blur-xs {
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
@@ -1710,67 +1672,6 @@ a:active,
         0 0 20px rgba(204, 34, 0, 0.6),
         0 0 30px rgba(204, 34, 0, 0.4),
         0 0 40px rgba(204, 34, 0, 0.2);
-}
-
-.special-team-digit {
-    display: inline-block;
-    animation: gold-glow 2s ease-in-out infinite;
-}
-
-@keyframes gold-glow {
-    0% {
-        color: inherit;
-    }
-    15% {
-        color: #fbbf24;
-    }
-    30% {
-        color: #fbbf24;
-    }
-    45% {
-        color: inherit;
-    }
-    100% {
-        color: inherit;
-    }
-}
-
-.rainbow-team-digit {
-    display: inline-block;
-    animation: rainbow-glow 2s ease-in-out infinite;
-}
-
-@keyframes rainbow-glow {
-    0% {
-        color: inherit;
-    }
-    10% {
-        color: #ef4444;
-    }
-    20% {
-        color: #f97316;
-    }
-    30% {
-        color: #eab308;
-    }
-    40% {
-        color: #22c55e;
-    }
-    50% {
-        color: #3b82f6;
-    }
-    60% {
-        color: #8b5cf6;
-    }
-    70% {
-        color: #ec4899;
-    }
-    80% {
-        color: inherit;
-    }
-    100% {
-        color: inherit;
-    }
 }
 
 #tba-import-container > div,

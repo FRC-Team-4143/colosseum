@@ -1,10 +1,6 @@
 //! Tauri command surface for the native helper layer.
 
-use std::{
-    collections::HashSet,
-    sync::Mutex,
-    time::{SystemTime, UNIX_EPOCH},
-};
+use std::{collections::HashSet, sync::Mutex};
 
 use serde_json::{json, Value};
 use tauri::{AppHandle, Manager, State};
@@ -12,11 +8,8 @@ use tauri_plugin_opener::OpenerExt;
 
 use crate::helpers::storage::KeyValueStore;
 use crate::{
-    adapters::{GithubAdapter, HttpAdapter, JsonFileStore},
-    helpers::{
-        board, config, contributors, manager, match_model, pdf, platform, qr, search, statbotics,
-        storage, tba,
-    },
+    adapters::{HttpAdapter, JsonFileStore},
+    helpers::{board, config, manager, match_model, pdf, platform, qr, search, storage, tba},
 };
 
 pub type CommandResult<T> = Result<T, String>;
@@ -27,9 +20,6 @@ pub struct RuntimeState {
     pub qr_import: Mutex<qr::QrImportState>,
     pub tba_key: Mutex<Option<String>>,
     pub http: HttpAdapter,
-    pub github: GithubAdapter,
-    pub teams: Mutex<Option<Vec<String>>>,
-    pub contributors: Mutex<Option<Vec<contributors::Contributor>>>,
 }
 
 impl RuntimeState {
@@ -51,10 +41,7 @@ impl RuntimeState {
             board: Mutex::new(board::Board::default()),
             qr_import: Mutex::new(qr::QrImportState::default()),
             tba_key: Mutex::new(tba_key),
-            github: GithubAdapter::new(http.clone()),
             http,
-            teams: Mutex::new(None),
-            contributors: Mutex::new(None),
         })
     }
 }
@@ -64,13 +51,6 @@ fn lock<T>(mutex: &Mutex<T>) -> CommandResult<std::sync::MutexGuard<'_, T>> {
         .lock()
         .map_err(|_| "application state lock was poisoned".into())
 }
-fn now_ms() -> u64 {
-    SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .unwrap_or_default()
-        .as_millis() as u64
-}
-
 #[tauri::command]
 pub fn storage_get(state: State<'_, RuntimeState>, key: String) -> CommandResult<Option<Value>> {
     lock(&state.storage)?
@@ -110,32 +90,6 @@ pub fn storage_entries(state: State<'_, RuntimeState>) -> CommandResult<Vec<(Str
         .entries()
         .map_err(|error| error.to_string())
 }
-#[tauri::command]
-pub fn statbotics_cached(
-    state: State<'_, RuntimeState>,
-    match_key: String,
-) -> CommandResult<Option<Value>> {
-    storage::get_cached_statbotics(
-        &mut *lock(&state.storage)?,
-        &match_key,
-        now_ms(),
-        storage::DEFAULT_STATBOTICS_TTL_MS,
-    )
-    .map_err(|error| error.to_string())
-}
-#[tauri::command]
-pub fn statbotics_cache_timestamp(
-    state: State<'_, RuntimeState>,
-    match_key: String,
-) -> CommandResult<Option<u64>> {
-    storage::get_statbotics_timestamp(&*lock(&state.storage)?, &match_key)
-        .map_err(|error| error.to_string())
-}
-#[tauri::command]
-pub fn statbotics_clear_cache(state: State<'_, RuntimeState>) -> CommandResult<usize> {
-    storage::clear_statbotics_cache(&mut *lock(&state.storage)?).map_err(|error| error.to_string())
-}
-
 fn tba_service(state: &RuntimeState) -> CommandResult<tba::TbaService> {
     let mut service = tba::TbaService::new(Some(config::Config::current().shared_tba_api_key));
     let saved = lock(&state.storage)?
@@ -237,134 +191,6 @@ pub fn tba_simple_events(events: Vec<tba::TbaEvent>) -> Vec<tba::TbaSimpleEvent>
 #[tauri::command]
 pub fn tba_simple_matches(matches: Vec<tba::TbaMatch>) -> Vec<tba::TbaSimpleMatch> {
     tba::parse_matches_to_simple(&matches)
-}
-
-fn valid_endpoint(endpoint: &str) -> bool {
-    endpoint.starts_with('/')
-        && !endpoint.contains("..")
-        && !endpoint.contains('?')
-        && !endpoint.contains('#')
-}
-#[tauri::command]
-pub async fn statbotics_fetch(
-    state: State<'_, RuntimeState>,
-    endpoint: String,
-) -> CommandResult<Value> {
-    if !valid_endpoint(&endpoint) {
-        return Err("invalid Statbotics endpoint".into());
-    }
-    let cache_key = endpoint.strip_prefix("/match/").unwrap_or(&endpoint);
-    if let Some(data) = storage::get_cached_statbotics(
-        &mut *lock(&state.storage)?,
-        cache_key,
-        now_ms(),
-        storage::DEFAULT_STATBOTICS_TTL_MS,
-    )
-    .map_err(|error| error.to_string())?
-    {
-        return Ok(data);
-    }
-    let response = state
-        .http
-        .get(
-            &format!("{}{}", statbotics::STATBOTICS_API_BASE, endpoint),
-            &[],
-        )
-        .await?;
-    if response.status == 404 {
-        return Err("Statbotics API error: 404 - Data not found".into());
-    }
-    if !(200..300).contains(&response.status) {
-        return Err(format!(
-            "Statbotics API error: {} - {}",
-            response.status, response.status_text
-        ));
-    }
-    let data: Value = response
-        .json()
-        .map_err(|error| format!("Statbotics API JSON error: {error}"))?;
-    storage::cache_statbotics(
-        &mut *lock(&state.storage)?,
-        cache_key,
-        data.clone(),
-        now_ms(),
-    )
-    .map_err(|error| error.to_string())?;
-    Ok(data)
-}
-#[tauri::command]
-pub fn statbotics_match_key(event_key: String, match_name: String) -> String {
-    statbotics::construct_match_key(&event_key, &match_name)
-}
-#[tauri::command]
-pub async fn statbotics_match(
-    state: State<'_, RuntimeState>,
-    match_key: String,
-) -> CommandResult<statbotics::StatboticsMatch> {
-    serde_json::from_value(statbotics_fetch(state, format!("/match/{match_key}")).await?)
-        .map_err(|error| error.to_string())
-}
-#[tauri::command]
-pub async fn statbotics_year(
-    state: State<'_, RuntimeState>,
-    year: i32,
-) -> CommandResult<statbotics::StatboticsYear> {
-    serde_json::from_value(statbotics_fetch(state, format!("/year/{year}")).await?)
-        .map_err(|error| error.to_string())
-}
-#[tauri::command]
-pub async fn statbotics_team_year(
-    state: State<'_, RuntimeState>,
-    team: i32,
-    year: i32,
-) -> CommandResult<statbotics::StatboticsTeamYear> {
-    serde_json::from_value(statbotics_fetch(state, format!("/team_year/{team}/{year}")).await?)
-        .map_err(|error| error.to_string())
-}
-
-#[tauri::command]
-pub async fn github_teams(state: State<'_, RuntimeState>) -> CommandResult<Vec<String>> {
-    if let Some(value) = lock(&state.teams)?.clone() {
-        return Ok(value);
-    }
-    let teams = contributors::parse_teams(&state.github.teams().await?);
-    *lock(&state.teams)? = Some(teams.clone());
-    Ok(teams)
-}
-#[tauri::command]
-pub async fn github_contributors(
-    state: State<'_, RuntimeState>,
-    count: Option<usize>,
-) -> CommandResult<Vec<contributors::Contributor>> {
-    let cached = { lock(&state.contributors)?.clone() };
-    let values = if let Some(value) = cached {
-        value
-    } else {
-        // The contributors endpoint already contains everything needed by the UI.
-        // Avoid one additional GitHub request per contributor: it is substantially
-        // faster and is far less likely to exhaust the unauthenticated rate limit.
-        let enriched = state
-            .github
-            .contributors()
-            .await?
-            .into_iter()
-            .filter(|contributor| !contributors::is_dependabot(&contributor.login))
-            .map(|contributor| contributors::Contributor {
-                login: contributor.login,
-                avatar_url: contributor.avatar_url,
-                html_url: contributor.html_url,
-                contributions: contributor.contributions,
-                name: None,
-                bio: None,
-            })
-            .collect::<Vec<_>>();
-        *lock(&state.contributors)? = Some(enriched.clone());
-        enriched
-    };
-    Ok(values
-        .into_iter()
-        .take(count.unwrap_or(usize::MAX))
-        .collect())
 }
 
 #[tauri::command]

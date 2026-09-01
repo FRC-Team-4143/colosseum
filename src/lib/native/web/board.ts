@@ -10,7 +10,7 @@ import type { WebCommandHandler } from "./index";
  * never uses it (each handler just mutates then returns `state()`), so it is
  * intentionally omitted here.
  */
-type BoardMode = "auto" | "teleop" | "transition" | "endgame" | "notes" | "statbotics";
+type BoardMode = "auto" | "teleop" | "transition" | "endgame" | "notes";
 type BoardTool = "marker" | "eraser";
 
 interface BoardState {
