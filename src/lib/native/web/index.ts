@@ -4,7 +4,10 @@ import { boardCommands } from "./board";
 import { configCommands } from "./config";
 import { fieldCommands } from "./field";
 import { modelCommands } from "./model";
+import { pdfCommands } from "./pdf";
 import { platformCommands } from "./platform";
+import { qrCommands } from "./qr";
+import { searchCommands } from "./search";
 import { storageCommands } from "./storage";
 
 /**
@@ -14,9 +17,8 @@ import { storageCommands } from "./storage";
  * This module is only imported when `isTauri()` is false (see `../api.ts`), so
  * it is code-split out of the desktop bundle entirely. Ported so far:
  *   - Phase 1: config, field, platform, storage, board
- *   - Phase 2: model_*, match_* (packet codec)
+ *   - Phase 2: model_*, match_* (packet codec), qr_*, pdf_*, fuzzy_*
  * Still pending (throw until ported):
- *   - Phase 2: qr, pdf, fuzzy search
  *   - Phase 3: tba, statbotics, github
  */
 export type WebCommandHandler = (args: Record<string, unknown>) => unknown | Promise<unknown>;
@@ -29,6 +31,9 @@ export const webCommands: Record<string, WebCommandHandler> = {
   ...storageCommands,
   ...boardCommands,
   ...modelCommands,
+  ...qrCommands,
+  ...pdfCommands,
+  ...searchCommands,
 };
 
 function toArgRecord(args: InvokeArgs | undefined): Record<string, unknown> {
