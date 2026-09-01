@@ -4,6 +4,7 @@
   import { app } from "$lib/stores/app.svelte";
   import { session } from "$lib/stores/identity.svelte";
   import { eventStore } from "$lib/stores/event.svelte";
+  import { pickList } from "$lib/stores/picklist.svelte";
   import { native } from "$lib/native/api";
   import { clonePacket, dismissRelease, isReleaseDismissed } from "$lib/features";
   import AppLoading from "$lib/components/AppLoading.svelte";
@@ -12,6 +13,7 @@
   import MatchEditorModal from "$lib/components/MatchEditorModal.svelte";
   import MatchList from "$lib/components/MatchList.svelte";
   import OrientationWarning from "$lib/components/OrientationWarning.svelte";
+  import PickList from "$lib/components/PickList.svelte";
   import QrExportModal from "$lib/components/QrExportModal.svelte";
   import ReleaseAnnouncementModal from "$lib/components/ReleaseAnnouncementModal.svelte";
   import ScheduleView from "$lib/components/ScheduleView.svelte";
@@ -114,8 +116,18 @@
     releaseOpen = false;
   }
 
-  function addToPicklist(_team: number) {
-    notice("The pick list arrives in the next update.");
+  async function addToPicklist(team: number) {
+    const eventKey = eventStore.currentEventKey;
+    if (!eventKey) {
+      notice("Choose an event first.");
+      return;
+    }
+    try {
+      await pickList.add(eventKey, team);
+      notice(`Added ${team} to the pick list.`);
+    } catch {
+      notice("Could not add to the pick list.");
+    }
   }
 </script>
 
@@ -175,7 +187,7 @@
             onAddToPicklist={addToPicklist}
           />
         {:else if app.screen === "picklist"}
-          <div class="placeholder">The pick list lands in the next update.</div>
+          <PickList onNotice={notice} />
         {/if}
       </div>
     </div>
@@ -205,11 +217,6 @@
     display: flex;
     flex-direction: column;
     background: #0a0a0a;
-  }
-  .placeholder {
-    padding: 4rem 1rem;
-    text-align: center;
-    color: #9a7878;
   }
   .saved-boards {
     border-top: 1px solid #2a1a1a;

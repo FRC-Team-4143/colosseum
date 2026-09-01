@@ -40,6 +40,24 @@ class TbaCache(Base):
     fetched_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.utcnow)
 
 
+class PickListEntry(Base):
+    """One team on a workspace's pick list for an event. Per-workspace (4143 and 4423 keep
+    separate lists) and per-event. `position` is a dense 0-based order; `tag` is
+    "" | "picked" | "dnp"."""
+    __tablename__ = "pick_list_entries"
+    __table_args__ = (UniqueConstraint("workspace", "event_key", "team", name="uq_pick_entry"),)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    workspace: Mapped[int] = mapped_column(Integer, nullable=False, index=True)
+    event_key: Mapped[str] = mapped_column(String(20), nullable=False, index=True)
+    team: Mapped[int] = mapped_column(Integer, nullable=False)
+    position: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    note: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    tag: Mapped[str] = mapped_column(String(10), nullable=False, default="")
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow
+    )
+
+
 class TeamNote(Base):
     """A free-text scouting note about a team at an event. Shared by everyone at that
     event (keyed by event + team, not by workspace); last write wins."""
