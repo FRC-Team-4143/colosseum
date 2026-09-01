@@ -95,6 +95,14 @@ export class WhiteboardController {
     refs.drawing.addEventListener("pointerup", this.onPointerEnd, { signal });
     refs.drawing.addEventListener("pointercancel", this.onPointerEnd, { signal });
     refs.drawing.addEventListener("lostpointercapture", this.onPointerEnd, { signal });
+    // Suppress iOS Safari's double-tap gesture: two quick taps close together
+    // otherwise get held back / dropped while the engine decides if it's a
+    // double-tap-to-zoom, which is why a fast second stroke sometimes never
+    // starts. `touch-action: none` alone doesn't cover this.
+    const swallowTouch = (event: Event) => event.preventDefault();
+    refs.drawing.addEventListener("touchstart", swallowTouch, { signal, passive: false });
+    refs.drawing.addEventListener("touchend", swallowTouch, { signal, passive: false });
+    refs.drawing.addEventListener("contextmenu", swallowTouch, { signal });
     window.addEventListener("keydown", this.onKeyDown, { signal });
     this.resizeObserver = new ResizeObserver(() => this.updateLayout());
     this.resizeObserver.observe(refs.container);
@@ -167,12 +175,23 @@ export class WhiteboardController {
       return;
     }
     if (event.pointerType === "pen" && event.button === 1) { this.toggleTool(); return; }
-    if (event.button !== 0 && event.pointerType !== "touch") return;
+    // Reject only a real secondary button (middle/right). Fast pointer streams
+    // on iOS sometimes deliver the down with `button === -1` ("no change"),
+    // which the old `!== 0` test dropped — that lost the whole stroke.
+    if (event.button > 0 && event.pointerType !== "touch") return;
     event.preventDefault();
     const point = this.eventPoint(event); if (!point) return;
-    this.refs.drawing.setPointerCapture(event.pointerId);
     const erased: Extract<Action, { kind: "erase" }> = { kind: "erase", strokes: [], checkboxes: [] };
+    // Set the active pointer BEFORE capturing: iOS can refuse `setPointerCapture`
+    // for a pointer it already released during a fast gesture, and an unguarded
+    // throw here used to abort the handler before the stroke ever began. The
+    // id-match guard in move/up works with or without capture.
     this.pointer = { id: event.pointerId, last: point, stroke: null, erased };
+    try {
+      this.refs.drawing.setPointerCapture(event.pointerId);
+    } catch {
+      /* capture unavailable — stroke still tracked while the pointer stays on-canvas */
+    }
     const selected = this.robotAt(point);
     if (this.selected && this.rotationHandleAt(point, this.selected)) {
       this.selected.rotating = true; this.selected.before = this.pose(this.selected.robot); return;
@@ -213,7 +232,17 @@ export class WhiteboardController {
       this.drawItems(); return;
     }
     if (pointer.stroke) {
-      const phase = this.phase(); if (phase) { phase.drawing.push(pointer.stroke); phase.drawingBBox.push(strokeBounds(pointer.stroke)); this.redrawDrawing(); this.record({ kind: "stroke", stroke: pointer.stroke }, "stroke"); }
+      const phase = this.phase();
+      if (phase) {
+        phase.drawing.push(pointer.stroke);
+        phase.drawingBBox.push(strokeBounds(pointer.stroke));
+        // The live segments already painted a multi-point stroke; only a tap
+        // (<= 1 point, nothing drawn live) needs a repaint to show its dot.
+        // Skipping the full clear+redraw here keeps the frame after pointer-up
+        // cheap, so a fast next pointerdown isn't dropped to jank.
+        if (pointer.stroke.length <= 2) this.redrawDrawing();
+        this.record({ kind: "stroke", stroke: pointer.stroke }, "stroke");
+      }
     } else if (pointer.erased.strokes.length || pointer.erased.checkboxes.length) this.record(pointer.erased, "erase");
   };
 
