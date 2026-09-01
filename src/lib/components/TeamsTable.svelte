@@ -12,8 +12,15 @@
   let showComponents = $state(false);
 
   const stats = $derived(
-    buildTeamStats(eventStore.teams.data, eventStore.rankings.data, eventStore.oprs.data, eventStore.coprs.data),
+    buildTeamStats(
+      eventStore.teams.data,
+      eventStore.rankings.data,
+      eventStore.oprs.data,
+      eventStore.coprs.data,
+      eventStore.epa.data,
+    ),
   );
+  const hasEpa = $derived(Object.keys(eventStore.epa.data ?? {}).length > 0);
   const componentColumns = $derived(showComponents ? stats.componentNames : []);
   const visible = $derived(
     sortRows(
@@ -73,6 +80,7 @@
               <th class="num" onclick={() => sortBy("opr")}>OPR{arrow("opr")}</th>
               <th class="num" onclick={() => sortBy("dpr")}>DPR{arrow("dpr")}</th>
               <th class="num" onclick={() => sortBy("ccwm")}>CCWM{arrow("ccwm")}</th>
+              {#if hasEpa}<th class="num" title="Statbotics EPA" onclick={() => sortBy("epa")}>EPA{arrow("epa")}</th>{/if}
               <th class="num" title="Manual scouting records">Scouted</th>
               {#each componentColumns as name (name)}
                 <th class="num" onclick={() => sortBy(`component:${name}`)}>{name}{arrow(`component:${name}`)}</th>
@@ -91,6 +99,7 @@
                 <td class="num">{fixed(row.opr)}</td>
                 <td class="num">{fixed(row.dpr)}</td>
                 <td class="num">{fixed(row.ccwm)}</td>
+                {#if hasEpa}<td class="num">{fixed(row.epa)}</td>{/if}
                 <td class="num">{scoutedCount().get(row.team) ?? 0}</td>
                 {#each componentColumns as name (name)}
                   <td class="num">{fixed(row.components[name] ?? null)}</td>

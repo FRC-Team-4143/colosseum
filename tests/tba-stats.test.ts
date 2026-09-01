@@ -58,6 +58,14 @@ describe("buildTeamStats", () => {
     expect(componentNames).toEqual([]);
     expect(rows).toHaveLength(3);
     expect(rows[0].rank).toBeNull();
+    expect(rows[0].epa).toBeNull();
+  });
+
+  it("attaches Statbotics EPA by team number when provided", () => {
+    const { rows } = buildTeamStats(teams, rankings, oprs, coprs, { "254": 41.2, "9": 12 });
+    expect(rows.find((r) => r.team === 254)!.epa).toBe(41.2);
+    expect(rows.find((r) => r.team === 9)!.epa).toBe(12);
+    expect(rows.find((r) => r.team === 1)!.epa).toBeNull();
   });
 });
 
@@ -78,5 +86,10 @@ describe("sortRows", () => {
 
   it("sorts by a component column", () => {
     expect(sortRows(rows, "component:Barge Points", "desc").map((r) => r.team)).toEqual([254, 9, 1]);
+  });
+
+  it("sorts by EPA", () => {
+    const withEpa = buildTeamStats(teams, rankings, oprs, coprs, { "254": 41.2, "9": 12 }).rows;
+    expect(sortRows(withEpa, "epa", "desc").map((r) => r.team)).toEqual([254, 9, 1]);
   });
 });

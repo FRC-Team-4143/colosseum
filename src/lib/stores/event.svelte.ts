@@ -21,8 +21,9 @@ let rankings = $state<Resource<Record<string, unknown>>>(empty());
 let oprs = $state<Resource<Record<string, unknown>>>(empty());
 let coprs = $state<Resource<Record<string, unknown>>>(empty());
 let insights = $state<Resource<Record<string, unknown>>>(empty());
+let epa = $state<Resource<Record<string, number>>>(empty());
 
-const ALL = [event, teams, matches, rankings, oprs, coprs, insights];
+const ALL = [event, teams, matches, rankings, oprs, coprs, insights, epa];
 
 function resetResources(): void {
   for (const res of ALL) {
@@ -53,6 +54,7 @@ async function loadAll(key: string): Promise<void> {
     load(oprs, `/api/tba/event/${key}/oprs`),
     load(coprs, `/api/tba/event/${key}/coprs`),
     load(insights, `/api/tba/event/${key}/insights`),
+    load(epa, `/api/statbotics/event/${key}`),
   ]);
 }
 
@@ -72,6 +74,7 @@ export const eventStore = {
   get oprs(): Resource<Record<string, unknown>> { return oprs; },
   get coprs(): Resource<Record<string, unknown>> { return coprs; },
   get insights(): Resource<Record<string, unknown>> { return insights; },
+  get epa(): Resource<Record<string, number>> { return epa; },
 
   async init(): Promise<void> {
     bootLoading = true;
@@ -100,6 +103,7 @@ export const eventStore = {
       load(rankings, `/api/tba/event/${currentEventKey}/rankings`),
       load(oprs, `/api/tba/event/${currentEventKey}/oprs`),
       load(coprs, `/api/tba/event/${currentEventKey}/coprs`),
+      load(epa, `/api/statbotics/event/${currentEventKey}`),
     ]);
   },
 };

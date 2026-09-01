@@ -143,7 +143,7 @@ class _FakeTbaClient:
     async def __aexit__(self, *exc):
         return False
 
-    async def get(self, path):
+    async def get(self, path, **kwargs):
         _FakeTbaClient.calls.append(path)
         if _FakeTbaClient.fail:
             raise httpx.ConnectError("stub failure", request=httpx.Request("GET", path))

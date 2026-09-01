@@ -15,7 +15,13 @@
   } = $props();
 
   const stats = $derived(
-    buildTeamStats(eventStore.teams.data, eventStore.rankings.data, eventStore.oprs.data, eventStore.coprs.data),
+    buildTeamStats(
+      eventStore.teams.data,
+      eventStore.rankings.data,
+      eventStore.oprs.data,
+      eventStore.coprs.data,
+      eventStore.epa.data,
+    ),
   );
   const row = $derived(stats.rows.find((r) => r.team === team));
   const eventKey = $derived(eventStore.currentEventKey);
@@ -82,6 +88,9 @@
     <div class="card"><span>OPR</span><strong>{fixed(row?.opr)}</strong></div>
     <div class="card"><span>DPR</span><strong>{fixed(row?.dpr)}</strong></div>
     <div class="card"><span>CCWM</span><strong>{fixed(row?.ccwm)}</strong></div>
+    {#if row?.epa !== null && row?.epa !== undefined}
+      <div class="card"><span>EPA</span><strong>{fixed(row.epa)}</strong></div>
+    {/if}
     {#if showComponents}
       {#each stats.componentNames as name (name)}
         <div class="card"><span>{name}</span><strong>{fixed(row?.components[name] ?? null)}</strong></div>

@@ -12,6 +12,8 @@ export interface TeamStatRow {
   opr: number | null;
   dpr: number | null;
   ccwm: number | null;
+  /** Statbotics EPA (expected points contribution); null when Statbotics is off/unavailable. */
+  epa: number | null;
   /** Component OPRs by category name (year-specific; often empty pre-event). */
   components: Record<string, number>;
 }
@@ -35,6 +37,7 @@ export function buildTeamStats(
   rankings: Dict | null | undefined,
   oprs: Dict | null | undefined,
   coprs: Dict | null | undefined,
+  epaByTeam: Record<string, number> | null | undefined = null,
 ): TeamStats {
   const rankingList = (rankings?.rankings ?? []) as Array<Dict>;
   const rankLabel =
@@ -77,6 +80,7 @@ export function buildTeamStats(
       opr: numberOrNull(oprMap[frc]),
       dpr: numberOrNull(dprMap[frc]),
       ccwm: numberOrNull(ccwmMap[frc]),
+      epa: numberOrNull(epaByTeam?.[String(number)]),
       components,
     };
   });
@@ -93,6 +97,7 @@ export type SortKey =
   | "opr"
   | "dpr"
   | "ccwm"
+  | "epa"
   | `component:${string}`;
 
 function sortValue(row: TeamStatRow, key: SortKey): number | string | null {
@@ -105,6 +110,7 @@ function sortValue(row: TeamStatRow, key: SortKey): number | string | null {
     case "opr": return row.opr;
     case "dpr": return row.dpr;
     case "ccwm": return row.ccwm;
+    case "epa": return row.epa;
     default: return row.components[key.slice("component:".length)] ?? null;
   }
 }
