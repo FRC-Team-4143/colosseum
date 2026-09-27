@@ -1,6 +1,12 @@
+Colosseum includes code adapted from the following third-party project.
+
+--------------------------------------------------------------------------------
+Strategy Board (https://github.com/pranavgundu/Strategy-Board)
+Used in: src/lib/whiteboard/ and the whiteboard UI built on it
+--------------------------------------------------------------------------------
+
 MIT License
 
-Copyright (c) 2026 MARS/WARS Robotics (FRC Team 4143)
 Copyright (c) 2026 Pranav Gundu
 
 Permission is hereby granted, free of charge, to any person obtaining a copy

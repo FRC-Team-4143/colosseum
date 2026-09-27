@@ -16,7 +16,7 @@
     "test": "vitest run",
     "test:watch": "vitest"
   },
-  "license": "MIT",
+  "license": "UNLICENSED",
   "dependencies": {
     "pdf-lib": "^1.17.1",
     "qrcode": "^1.5.4"

@@ -15,8 +15,8 @@ workspace (4143 or 4423), and the two workspaces keep separate events, pick list
 whiteboards while sharing TBA data, scouting records and team notes for a given event.
 
 Whiteboard adapted from the open-source
-[Strategy Board](https://github.com/pranavgundu/Strategy-Board) by Pranav Gundu (MIT).
-See `LICENSE`.
+[Strategy Board](https://github.com/pranavgundu/Strategy-Board) by Pranav Gundu, used
+under the MIT License. See `THIRD_PARTY_NOTICES`.
 
 ## Layout
 
