@@ -1,5 +1,3 @@
-import { isNativeRuntime } from "./runtime";
-
 export interface ShareContent {
   title?: string;
   text?: string;
@@ -8,14 +6,9 @@ export interface ShareContent {
 
 export type ShareResult = "shared" | "copied";
 
-/** Writes through Tauri's explicit clipboard capability with a web fallback. */
+/** Writes to the clipboard, with an execCommand fallback for older browsers. */
 export async function copyText(text: string): Promise<void> {
   if (!text) throw new Error("Cannot copy empty text");
-  if (isNativeRuntime()) {
-    const { writeText } = await import("@tauri-apps/plugin-clipboard-manager");
-    await writeText(text, { label: "Colosseum" });
-    return;
-  }
   if (navigator.clipboard?.writeText) {
     await navigator.clipboard.writeText(text);
     return;

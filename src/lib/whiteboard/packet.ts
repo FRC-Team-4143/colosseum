@@ -1,3 +1,5 @@
+import { clonePacket } from "$lib/features/runtime";
+
 import { strokeBounds } from "./geometry";
 import type { CheckboxAnnotation, RobotPosition, Stroke, WhiteboardMatch, WhiteboardPhase } from "./types";
 
@@ -60,7 +62,7 @@ function packetPhase(phase: WhiteboardPhase): unknown[] {
  * replacements while the canvas has one mutable scene during a gesture.
  */
 export function writeWhiteboardPacket<TPacket extends WhiteboardPacket>(source: TPacket, match: WhiteboardMatch): TPacket {
-  const packet = structuredClone([...source]);
+  const packet = clonePacket([...source]);
   const body = array(packet[8]);
   while (body.length < 6) body.push(null);
   body[1] = packetPhase(match.auto); body[2] = packetPhase(match.teleop); body[3] = packetPhase(match.endgame); body[4] = packetPhase(match.notes); body[5] = packetPhase(match.transition);

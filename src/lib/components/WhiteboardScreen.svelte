@@ -3,7 +3,6 @@
   import { app } from "$lib/stores/app.svelte";
   import { createWhiteboardController, whiteboardMatchFromPacket, writeWhiteboardPacket, type WhiteboardController, type WhiteboardMatch, type WhiteboardMode, type WhiteboardState } from "$lib/whiteboard";
   import { safeFilename, savePng } from "$lib/features";
-  import StatboticsPanel from "./StatboticsPanel.svelte";
 
   let { pngRequest = 0, onNotice = () => {} }: { pngRequest?: number; onNotice?: (message: string) => void } = $props();
 
@@ -12,7 +11,7 @@
   let items = $state<HTMLCanvasElement>();
   let drawing = $state<HTMLCanvasElement>();
   let controller = $state<WhiteboardController | null>(null);
-  let ui = $state<WhiteboardState>({ mode: "auto", tool: "marker", color: 0, view: "full", canUndo: false, canRedo: false, isCanvasVisible: true });
+  let ui = $state<WhiteboardState>({ mode: "auto", tool: "marker", color: 0, view: "full", canUndo: false, canRedo: false });
   let fieldYear = $state<number | undefined>(undefined);
   let toolbar = $state<HTMLDivElement>();
   let toolbarLeft = $state<HTMLDivElement>();
@@ -41,10 +40,6 @@
   const teleopLabel = $derived(fieldYear === 2026 ? "ACTIVE" : "TELEOP");
   const endgameLabel = $derived(fieldYear === 2026 ? "INACTIVE" : "ENDGAME");
   const showTransition = $derived(fieldYear === 2026);
-  const showStats = $derived(
-    [app.activeMatch?.redOne, app.activeMatch?.redTwo, app.activeMatch?.redThree, app.activeMatch?.blueOne, app.activeMatch?.blueTwo, app.activeMatch?.blueThree]
-      .some((team) => team && team.trim() !== ""),
-  );
 
   function queueCommit(match: WhiteboardMatch) {
     const source = app.activeMatch;
@@ -127,7 +122,7 @@
     <div
       bind:this={toolbar}
       id="whiteboard-toolbar"
-      class="relative items-center w-full h-16 md:h-24 bg-[#111111] border-b border-[#1e1e1e] pt-[env(safe-area-inset-top)] {toolbarFit}"
+      class="relative items-center w-full h-16 md:h-24 bg-[#111111] border-b border-[#2a1a1a] pt-[env(safe-area-inset-top)] {toolbarFit}"
       style="z-index: 999"
     >
       <div bind:this={toolbarLeft} class="toolbar-left flex items-center ml-8 md:ml-14 gap-4">
@@ -156,9 +151,6 @@
         <button id="whiteboard-toolbar-mode-teleop" class="mode-btn select-none touch-none" class:mode-btn-active={ui.mode === "teleop"} onclick={() => setMode("teleop")}>{teleopLabel}</button>
         <button id="whiteboard-toolbar-mode-endgame" class="mode-btn select-none touch-none" class:mode-btn-active={ui.mode === "endgame"} onclick={() => setMode("endgame")}>{endgameLabel}</button>
         <button id="whiteboard-toolbar-mode-notes" class="mode-btn select-none touch-none" class:mode-btn-active={ui.mode === "notes"} onclick={() => setMode("notes")}>NOTES</button>
-        {#if showStats}
-          <button id="whiteboard-toolbar-mode-statbotics" class="mode-btn select-none touch-none" class:mode-btn-active={ui.mode === "statbotics"} onclick={() => setMode("statbotics")}>STATS</button>
-        {/if}
       </div>
 
       <div bind:this={toolbarRight} class="toolbar-right flex items-center justify-end gap-4 mr-8 md:mr-14">
@@ -175,24 +167,16 @@
     <div
       bind:this={container}
       id="whiteboard-wrapper"
-      class="w-full flex-1 min-h-0 m-0 p-0 bg-[#0d0d0d]"
-      class:hidden={!ui.isCanvasVisible}
+      class="w-full flex-1 min-h-0 m-0 p-0 bg-[#0a0a0a]"
     >
       <canvas bind:this={background} id="whiteboard-canvas-background" width="3510" height="1610" class="absolute m-0 select-none touch-none"></canvas>
       <canvas bind:this={items} id="whiteboard-canvas-items" width="3510" height="1610" class="absolute m-0 select-none touch-none"></canvas>
       <canvas bind:this={drawing} id="whiteboard-canvas-drawing" width="3510" height="1610" class="absolute m-0 select-none touch-none"></canvas>
     </div>
 
-    {#if !ui.isCanvasVisible}
-      <div id="whiteboard-statbotics-container" class="w-full flex-1 min-h-0 m-0 p-0 bg-[#0d0d0d] flex flex-col overflow-y-auto">
-        <StatboticsPanel match={app.activeMatch} visible={!ui.isCanvasVisible} />
-      </div>
-    {/if}
-
-    {#if ui.isCanvasVisible}
       <div
         id="whiteboard-draw-config"
-        class="absolute flex flex-col justify-center items-center size-10 sm:size-12 md:size-14 lg:size-16 xl:size-20 bottom-3 sm:bottom-4 md:bottom-6 right-3 sm:right-4 md:right-6 bg-[#1a1a1a] border border-[#3a3a3a] rounded-full cursor-pointer"
+        class="absolute flex flex-col justify-center items-center size-10 sm:size-12 md:size-14 lg:size-16 xl:size-20 bottom-3 sm:bottom-4 md:bottom-6 right-3 sm:right-4 md:right-6 bg-[#1a0f0f] border border-[#3a2020] rounded-full cursor-pointer"
         role="button"
         tabindex="0"
         aria-label="Change tool"
@@ -206,7 +190,7 @@
 
       <div
         id="whiteboard-color-config"
-        class="absolute flex flex-col justify-center items-center bottom-3 sm:bottom-4 md:bottom-6 left-3 sm:left-4 md:left-6 bg-[#1a1a1a] border border-[#3a3a3a] rounded-full p-2 sm:p-3"
+        class="absolute flex flex-col justify-center items-center bottom-3 sm:bottom-4 md:bottom-6 left-3 sm:left-4 md:left-6 bg-[#1a0f0f] border border-[#3a2020] rounded-full p-2 sm:p-3"
         class:hidden={ui.tool === "eraser"}
         class:color-picker-hidden={paletteClosing}
       >
@@ -225,7 +209,7 @@
         {/each}
         <div
           id="whiteboard-color-close"
-          class="size-5 sm:size-6 md:size-8 lg:size-10 xl:size-12 m-1 sm:m-1.5 md:m-2 flex justify-center items-center text-center rounded-full border-2 border-[#3a3a3a] bg-[#2a2a2a] cursor-pointer"
+          class="size-5 sm:size-6 md:size-8 lg:size-10 xl:size-12 m-1 sm:m-1.5 md:m-2 flex justify-center items-center text-center rounded-full border-2 border-[#3a2020] bg-[#2a1a1a] cursor-pointer"
           class:hidden={!paletteOpen}
           role="button"
           tabindex="0"
@@ -236,7 +220,6 @@
           <i class="fa fa-close text-xs sm:text-sm md:text-base lg:text-lg xl:text-xl text-red-500"></i>
         </div>
       </div>
-    {/if}
   </div>
 {/if}
 

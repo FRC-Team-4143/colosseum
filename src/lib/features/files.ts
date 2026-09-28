@@ -1,4 +1,4 @@
-import { isNativeRuntime, safeFilename } from "./runtime";
+import { safeFilename } from "./runtime";
 
 export interface SaveFileOptions {
   filename: string;
@@ -37,26 +37,10 @@ function browserDownload(bytes: Uint8Array, options: SaveFileOptions): SaveFileR
   return { saved: true };
 }
 
-/**
- * Saves bytes through the native save sheet in Tauri, falling back to an
- * ordinary browser download for the web build. A cancelled picker is not an error.
- */
+/** Saves bytes via an ordinary browser download. */
 export async function saveFile(bytes: Uint8Array, options: SaveFileOptions): Promise<SaveFileResult> {
   const filename = withExtension(options.filename, options.extension);
-  if (!isNativeRuntime()) return browserDownload(bytes, { ...options, filename });
-
-  const [{ save }, { writeFile }] = await Promise.all([
-    import("@tauri-apps/plugin-dialog"),
-    import("@tauri-apps/plugin-fs"),
-  ]);
-  const path = await save({
-    title: options.title,
-    defaultPath: filename,
-    filters: [{ name: options.extension.toUpperCase(), extensions: [options.extension.replace(/^\./, "")] }],
-  });
-  if (!path) return { saved: false };
-  await writeFile(path, bytes);
-  return { saved: true, path };
+  return browserDownload(bytes, { ...options, filename });
 }
 
 export async function savePng(dataUrl: string, filename: string): Promise<SaveFileResult> {

@@ -1,111 +1,73 @@
 # How to Use Colosseum
 
-- [Opening Colosseum](#opening-colosseum)
-- [Creating a new match](#creating-a-new-match)
-- [Using the whiteboard](#using-the-whiteboard)
-  - [Switching sections](#switching-sections)
-  - [Toggling views](#toggling-views)
-  - [Drawing](#drawing)
-  - [Erasing](#erasing)
-  - [Switching colors](#switching-colors)
-  - [Checkboxes](#checkboxes)
-- [Managing matches](#managing-matches)
-- [Importing matches from TBA](#importing-matches-from-tba)
-- [Exporting matches](#exporting-matches)
-- [Importing from a QR code](#importing-from-a-qr-code)
+- [Signing in](#signing-in)
+- [Choosing an event](#choosing-an-event)
+- [Schedule](#schedule)
+- [Teams and stats](#teams-and-stats)
+- [Pick list](#pick-list)
+- [Scouting](#scouting)
+- [Whiteboard](#whiteboard)
 
-## Opening Colosseum
+## Signing in
 
-Colosseum is a desktop/mobile app, not a website. Launch the installed **Colosseum**
-app, or run `bun run tauri dev` from a checkout. The first launch asks for your team
-number.
+Open `https://colosseum.marswars.org`. It bounces you to Legion to approve the sign-in in
+Slack, then back. Your Legion **team number** decides which workspace you land in — 4143
+or 4423. The two workspaces are separate: each has its own selected event, pick list, and
+whiteboards. TBA stats, scouting records, and team notes for an event are shared between
+both.
 
-## Creating a new match
+If your team number isn't 4143 or 4423 you'll see "Not authorized" — ask a mentor to
+check your Legion profile.
 
-1. Click the green **New** button on the home screen.
-2. Fill in the match details:
-   - **Match Name** — a label for the match.
-   - **Team Numbers** — the three red and three blue teams. The order you enter them is
-     the order they appear on the whiteboard.
-3. Click **Create**. The match appears on the home screen; click it to open the
-   whiteboard.
+## Choosing an event
 
-## Using the whiteboard
+The top bar shows the current event with a **Change** button (and a first-run "Choose an
+event" prompt). Search by name and pick one; everything below re-scopes to it. **Refresh**
+re-pulls the schedule and stats from The Blue Alliance — do this between matches at a live
+event.
 
-### Switching sections
+## Schedule
 
-The whiteboard is split into sections for the parts of a match:
+Every match in playing order, with live scores once a match is played and your team
+underlined. Each row has:
 
-- Autonomous (**Auto**)
-- Teleoperated (**Teleop**)
-- **Transition**
-- **Endgame**
-- **Notes**
+- **Scout** — record what a team did in that match (see below).
+- **Whiteboard** — open (or start) the strategy board for that match.
 
-Auto, Teleop, Transition, and Endgame share the same field view (they are the same
-fields for different parts of the match). **Notes** is a freeform section for anything
-else, including ranking points. Switch sections with the buttons at the top of the
-whiteboard; the active one is bold.
+Below the schedule, **Your saved boards** lists whiteboards you've opened, with edit /
+duplicate / export / delete.
 
-### Toggling views
+## Teams and stats
 
-Click the toggle-view button (top right) repeatedly to cycle through full field, red
-alliance only, and blue alliance only.
+The **Teams** tab is a sortable table of every team at the event: rank, record, the
+event's ranking score, OPR / DPR / CCWM, an optional Statbotics **EPA** column, and a
+**Scouted** count. "Show N detail columns" adds the year's component OPRs. Click a team
+for its detail page: stat cards, a shared note, its scouting averages, and its match list
+(each with Scout / Whiteboard).
 
-### Drawing
+The **＋** on a table row or **Add to pick list** on a team page drops the team onto your
+pick list.
 
-Select the marker tool to draw strategy on the field. A stylus gives the best
-precision, but mouse and touch work too.
+## Pick list
 
-### Erasing
+Your workspace's list for the current event (4143 and 4423 keep separate lists). Add a
+team by number, reorder with ▲/▼, type a per-row note, and cycle a row's tag between
+**picked** / **DNP** / none. Everyone on your team sees the same list, live.
 
-Cycle the bottom-right tool button to the eraser to remove strokes.
+## Scouting
 
-### Switching colors
+From a **Scout** button, pick one of the six team slots (slots you've already scouted show
+a ✓), fill the form — piece counts, endgame and defense ratings, a broke-down toggle,
+notes — and **Save record**. One record per team per match; saving again overwrites it.
+Records are shared across 4143 and 4423 for that event, and roll up into each team's
+averages on its detail page.
 
-With the marker (or the checkbox tool in Notes) selected, open the color picker at the
-bottom left to change the drawing color. The current color is shown there.
+## Whiteboard
 
-### Checkboxes
-
-In the **Notes** section, cycle the bottom-right tool button to the checkbox tool.
-Place checkboxes anywhere; click one again to mark it done.
-
-## Managing matches
-
-Click the three-dot menu on a match card for:
-
-- **Edit** — change the name or team numbers.
-- **Duplicate** — copy the match (name prefixed with "Copy of ").
-- **Export PNG** / **Export QR** — see below.
-- **Delete** — permanently removes the match. This cannot be undone.
-
-**Clear** on the home toolbar deletes every match and all app data.
-
-## Importing matches from TBA
-
-1. Click the **TBA** button on the home toolbar.
-2. Choose whether to use your own The Blue Alliance API key (recommended during
-   competitions) — set `TBA_API_KEY`, or enter it in the dialog.
-3. Type an event name and pick it from the list (past events and events within the next
-   week are available).
-4. Pick a team to import that team's matches, or scroll down and choose **All Matches**.
-5. Click **Import**. The matches populate the home screen.
-
-## Exporting matches
-
-From a match's three-dot menu:
-
-- **Export PNG** — saves the current whiteboard as an image.
-- **Export QR** — encodes the whole match into one or more QR codes to hand off to
-  another device.
-
-From the whiteboard you can also export a **PDF** of the QR codes for printing.
-
-There is no online "share link" — match data never leaves your device except through
-these explicit exports.
-
-## Importing from a QR code
-
-Click **Import QR** on the home toolbar and scan the QR code(s) produced by another
-device's **Export QR**. Camera access is requested the first time.
+Unchanged from Strategy Board: mode tabs across the top (auto / teleop / transition /
+endgame / notes), a tool button for marker/eraser, a colour picker, and **TOGGLE VIEW**
+to focus one alliance. Drag the robot tokens; draw and erase freehand; tap to place
+checkboxes. Edits save automatically. Boards are shared with everyone on your team — if
+someone else changed a board you have open, you'll get a "changed on another device"
+notice. **EXIT** returns to the schedule; **Export PNG / QR** are on the saved-boards
+list.

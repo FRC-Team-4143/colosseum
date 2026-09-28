@@ -3,9 +3,7 @@ import { defineConfig } from "vite";
 import { sveltekit } from "@sveltejs/kit/vite";
 import tailwindcss from "@tailwindcss/vite";
 
-const host = process.env.TAURI_DEV_HOST;
-
-/** Build-time commit stamp shown in the footer. */
+/** Build-time commit stamp. */
 function getGitCommitInfo() {
   const REPO_URL = "https://github.com/FRC-Team-4143/colosseum";
   try {
@@ -33,25 +31,14 @@ export default defineConfig(async () => ({
     __BUILD_COMMIT__: JSON.stringify(getGitCommitInfo()),
   },
 
-  // Vite options tailored for Tauri development and only applied in `tauri dev` or `tauri build`
-  //
-  // 1. prevent Vite from obscuring rust errors
-  clearScreen: false,
-  // 2. tauri expects a fixed port, fail if that port is not available
+  // The FastAPI backend (server/) owns port 8005 in dev; Vite serves the SPA on
+  // 5173 and proxies /api to it. `host: true` keeps the dev server LAN-visible
+  // (e.g. for testing from an iPad on the same network).
   server: {
-    port: 1420,
-    strictPort: true,
-    host: host || false,
-    hmr: host
-      ? {
-          protocol: "ws",
-          host,
-          port: 1421,
-        }
-      : undefined,
-    watch: {
-      // 3. tell Vite to ignore watching `src-tauri`
-      ignored: ["**/src-tauri/**"],
+    port: 5173,
+    host: true,
+    proxy: {
+      "/api": "http://localhost:8005",
     },
   },
 }));

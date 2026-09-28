@@ -18,6 +18,8 @@ type Action =
 
 const slots: readonly Slot[] = ["redOne", "redTwo", "redThree", "blueOne", "blueTwo", "blueThree"];
 const COLORS = ["#ffffff", "#ef4444", "#3b82f6", "#22c55e", "#eab308"] as const;
+/** Ignore `touch` on the canvas for this long after the stylus was last seen. */
+const PEN_TOUCH_GRACE_MS = 700;
 const VIEWS: Record<View, Point> = { full: [FIELD_WIDTH / 2, FIELD_HEIGHT / 2], red: [(FIELD_WIDTH * 3) / 4, FIELD_HEIGHT / 2], blue: [FIELD_WIDTH / 4, FIELD_HEIGHT / 2] };
 const fieldImageCache = new Map<string, HTMLImageElement>();
 
@@ -54,6 +56,13 @@ export class WhiteboardController {
   private imageYear: number | undefined;
   private selected: { slot: Slot; robot: RobotPosition; offset: Point; rotating: boolean; before: Pick<RobotPosition, "x" | "y" | "r"> } | null = null;
   private pointer: { id: number; last: Point; stroke: Stroke | null; erased: Extract<Action, { kind: "erase" }> } | null = null;
+  /**
+   * Palm rejection: once a stylus (Apple Pencil / any `pen` pointer) is in use,
+   * `touch` pointers are ignored on the canvas for a short grace window so a
+   * resting hand doesn't draw. A finger-only user never trips this.
+   */
+  private penActive = false;
+  private lastPenAt = -Infinity;
   private undoHistory = new Map<BoardPhaseName, Action[]>();
   private redoHistory = new Map<BoardPhaseName, Action[]>();
   private resizeObserver: ResizeObserver | null = null;
@@ -86,6 +95,14 @@ export class WhiteboardController {
     refs.drawing.addEventListener("pointerup", this.onPointerEnd, { signal });
     refs.drawing.addEventListener("pointercancel", this.onPointerEnd, { signal });
     refs.drawing.addEventListener("lostpointercapture", this.onPointerEnd, { signal });
+    // Suppress iOS Safari's double-tap gesture: two quick taps close together
+    // otherwise get held back / dropped while the engine decides if it's a
+    // double-tap-to-zoom, which is why a fast second stroke sometimes never
+    // starts. `touch-action: none` alone doesn't cover this.
+    const swallowTouch = (event: Event) => event.preventDefault();
+    refs.drawing.addEventListener("touchstart", swallowTouch, { signal, passive: false });
+    refs.drawing.addEventListener("touchend", swallowTouch, { signal, passive: false });
+    refs.drawing.addEventListener("contextmenu", swallowTouch, { signal });
     window.addEventListener("keydown", this.onKeyDown, { signal });
     this.resizeObserver = new ResizeObserver(() => this.updateLayout());
     this.resizeObserver.observe(refs.container);
@@ -113,7 +130,7 @@ export class WhiteboardController {
   getMatch(): WhiteboardMatch | null { return this.match; }
   /** Field artwork year in use; phase labels differ from 2026 onward. */
   getCurrentFieldYear(): number | undefined { return this.fieldYear(); }
-  getState(): WhiteboardState { return { mode: this.mode, tool: this.tool, color: this.color, view: this.view, canUndo: this.canUndo(), canRedo: this.canRedo(), isCanvasVisible: this.mode !== "statbotics" }; }
+  getState(): WhiteboardState { return { mode: this.mode, tool: this.tool, color: this.color, view: this.view, canUndo: this.canUndo(), canRedo: this.canRedo() }; }
   setMode(mode: WhiteboardMode): void {
     if (this.mode === mode) return;
     this.mode = mode; this.selected = null; this.pointer = null;
@@ -147,14 +164,34 @@ export class WhiteboardController {
     event.preventDefault(); if (event.shiftKey) this.redo(); else this.undo();
   };
   private readonly onPointerDown = (event: PointerEvent): void => {
-    if (!this.refs || !this.match || this.mode === "statbotics") return;
+    if (!this.refs || !this.match) return;
+    if (event.pointerType === "pen") {
+      this.penActive = true;
+      this.lastPenAt = event.timeStamp;
+      // If a palm landed a fraction before the tip and began a stroke, drop it.
+      if (this.pointer && !this.selected) { this.pointer = null; this.redrawDrawing(); }
+    } else if (event.pointerType === "touch" && this.rejectTouch(event.timeStamp)) {
+      // A resting palm / stray finger while the stylus is in use.
+      return;
+    }
     if (event.pointerType === "pen" && event.button === 1) { this.toggleTool(); return; }
-    if (event.button !== 0 && event.pointerType !== "touch") return;
+    // Reject only a real secondary button (middle/right). Fast pointer streams
+    // on iOS sometimes deliver the down with `button === -1` ("no change"),
+    // which the old `!== 0` test dropped — that lost the whole stroke.
+    if (event.button > 0 && event.pointerType !== "touch") return;
     event.preventDefault();
     const point = this.eventPoint(event); if (!point) return;
-    this.refs.drawing.setPointerCapture(event.pointerId);
     const erased: Extract<Action, { kind: "erase" }> = { kind: "erase", strokes: [], checkboxes: [] };
+    // Set the active pointer BEFORE capturing: iOS can refuse `setPointerCapture`
+    // for a pointer it already released during a fast gesture, and an unguarded
+    // throw here used to abort the handler before the stroke ever began. The
+    // id-match guard in move/up works with or without capture.
     this.pointer = { id: event.pointerId, last: point, stroke: null, erased };
+    try {
+      this.refs.drawing.setPointerCapture(event.pointerId);
+    } catch {
+      /* capture unavailable — stroke still tracked while the pointer stays on-canvas */
+    }
     const selected = this.robotAt(point);
     if (this.selected && this.rotationHandleAt(point, this.selected)) {
       this.selected.rotating = true; this.selected.before = this.pose(this.selected.robot); return;
@@ -165,7 +202,13 @@ export class WhiteboardController {
     else if (this.tool === "checkbox") this.toggleCheckbox(point);
     else this.eraseSegment(point, point, erased);
   };
+  private rejectTouch(now: number): boolean {
+    return this.penActive || now - this.lastPenAt < PEN_TOUCH_GRACE_MS;
+  }
   private readonly onPointerMove = (event: PointerEvent): void => {
+    // Pen hover (no button down) still reaches here and keeps the grace window
+    // fresh, so a palm landing just before the tip is rejected too.
+    if (event.pointerType === "pen") this.lastPenAt = event.timeStamp;
     const pointer = this.pointer; if (!pointer || pointer.id !== event.pointerId) return;
     const point = this.eventPoint(event); if (!point) return;
     event.preventDefault();
@@ -176,6 +219,7 @@ export class WhiteboardController {
     } else if (this.tool === "eraser") { this.eraseSegment(pointer.last, point, pointer.erased); pointer.last = point; }
   };
   private readonly onPointerEnd = (event: PointerEvent): void => {
+    if (event.pointerType === "pen") { this.penActive = false; this.lastPenAt = event.timeStamp; }
     const pointer = this.pointer; if (!pointer || pointer.id !== event.pointerId) return;
     try { this.refs?.drawing.releasePointerCapture(event.pointerId); } catch { /* browser may already have released it */ }
     this.pointer = null;
@@ -188,12 +232,22 @@ export class WhiteboardController {
       this.drawItems(); return;
     }
     if (pointer.stroke) {
-      const phase = this.phase(); if (phase) { phase.drawing.push(pointer.stroke); phase.drawingBBox.push(strokeBounds(pointer.stroke)); this.redrawDrawing(); this.record({ kind: "stroke", stroke: pointer.stroke }, "stroke"); }
+      const phase = this.phase();
+      if (phase) {
+        phase.drawing.push(pointer.stroke);
+        phase.drawingBBox.push(strokeBounds(pointer.stroke));
+        // The live segments already painted a multi-point stroke; only a tap
+        // (<= 1 point, nothing drawn live) needs a repaint to show its dot.
+        // Skipping the full clear+redraw here keeps the frame after pointer-up
+        // cheap, so a fast next pointerdown isn't dropped to jank.
+        if (pointer.stroke.length <= 2) this.redrawDrawing();
+        this.record({ kind: "stroke", stroke: pointer.stroke }, "stroke");
+      }
     } else if (pointer.erased.strokes.length || pointer.erased.checkboxes.length) this.record(pointer.erased, "erase");
   };
 
-  private dataMode(): BoardPhaseName | null { return this.mode === "statbotics" ? null : this.mode; }
-  private phase(): WhiteboardPhase | null { return this.match && this.dataMode() ? phaseFor(this.match, this.dataMode()!) : null; }
+  private dataMode(): BoardPhaseName { return this.mode; }
+  private phase(): WhiteboardPhase | null { return this.match ? phaseFor(this.match, this.mode) : null; }
   private history(store: Map<BoardPhaseName, Action[]>, mode: BoardPhaseName): Action[] { let values = store.get(mode); if (!values) { values = []; store.set(mode, values); } return values; }
   private record(action: Action, reason: WhiteboardCommit["reason"]): void { const mode = this.dataMode(); if (!mode) return; const undo = this.history(this.undoHistory, mode); undo.push(action); if (undo.length > MAX_HISTORY) undo.shift(); this.redoHistory.set(mode, []); this.commit(reason); }
   private commit(reason: WhiteboardCommit["reason"]): void { const mode = this.dataMode(); if (this.match && mode) void this.options.onCommit?.({ match: this.match, mode, reason }); this.emitState(); }
@@ -257,7 +311,7 @@ export class WhiteboardController {
   }
   private drawNotesGrid(context: CanvasRenderingContext2D): void { context.fillStyle = "#000"; context.fillRect(0, 0, FIELD_WIDTH, FIELD_HEIGHT); context.strokeStyle = "rgba(255,255,255,.2)"; context.lineWidth = 1; for (let x = 0; x < FIELD_WIDTH; x += 100) { context.beginPath(); context.moveTo(x, 0); context.lineTo(x, FIELD_HEIGHT); context.stroke(); } for (let y = 0; y < FIELD_HEIGHT; y += 100) { context.beginPath(); context.moveTo(0, y); context.lineTo(FIELD_WIDTH, y); context.stroke(); } }
   private drawItems(): void {
-    const context = this.contexts?.items; const phase = this.phase(); if (!context) return; context.clearRect(0, 0, FIELD_WIDTH, FIELD_HEIGHT); if (!phase || this.mode === "notes" || this.mode === "statbotics") return;
+    const context = this.contexts?.items; const phase = this.phase(); if (!context) return; context.clearRect(0, 0, FIELD_WIDTH, FIELD_HEIGHT); if (!phase || this.mode === "notes") return;
     for (const slot of slots) this.drawRobot(context, slot, phase[`${slot}Robot`]);
   }
   private drawRobot(context: CanvasRenderingContext2D, slot: Slot, robot: RobotPosition): void {
@@ -269,7 +323,7 @@ export class WhiteboardController {
     context.restore();
   }
   private redrawDrawing(): void {
-    const context = this.contexts?.drawing; const phase = this.phase(); if (!context) return; context.clearRect(0, 0, FIELD_WIDTH, FIELD_HEIGHT); if (!phase || this.mode === "statbotics") return;
+    const context = this.contexts?.drawing; const phase = this.phase(); if (!context) return; context.clearRect(0, 0, FIELD_WIDTH, FIELD_HEIGHT); if (!phase) return;
     for (const stroke of phase.drawing) this.drawStroke(context, stroke);
     for (const checkbox of phase.checkboxes ?? []) this.drawCheckbox(context, checkbox);
   }

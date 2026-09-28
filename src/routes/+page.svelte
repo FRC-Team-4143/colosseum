@@ -2,35 +2,38 @@
   import { onMount } from "svelte";
   import "../app.css";
   import { app } from "$lib/stores/app.svelte";
+  import { session } from "$lib/stores/identity.svelte";
+  import { eventStore } from "$lib/stores/event.svelte";
+  import { pickList } from "$lib/stores/picklist.svelte";
+  import { scouting } from "$lib/stores/scouting.svelte";
+  import { toast } from "$lib/stores/toast.svelte";
   import { native } from "$lib/native/api";
-  import { buildCommit, dismissRelease, isNativeRuntime, isReleaseDismissed, loadTeamNumber, saveTeamNumber, timeAgo } from "$lib/features";
+  import { clonePacket, dismissRelease, isReleaseDismissed } from "$lib/features";
   import AppLoading from "$lib/components/AppLoading.svelte";
-  import ConfirmModal from "$lib/components/ConfirmModal.svelte";
-  import ContributorsModal from "$lib/components/ContributorsModal.svelte";
-  import HomeToolbar from "$lib/components/HomeToolbar.svelte";
+  import AppNav from "$lib/components/AppNav.svelte";
+  import EventPickerModal from "$lib/components/EventPickerModal.svelte";
   import MatchEditorModal from "$lib/components/MatchEditorModal.svelte";
   import MatchList from "$lib/components/MatchList.svelte";
   import OrientationWarning from "$lib/components/OrientationWarning.svelte";
+  import PickList from "$lib/components/PickList.svelte";
   import QrExportModal from "$lib/components/QrExportModal.svelte";
-  import QrImportModal from "$lib/components/QrImportModal.svelte";
   import ReleaseAnnouncementModal from "$lib/components/ReleaseAnnouncementModal.svelte";
-  import TbaImportModal from "$lib/components/TbaImportModal.svelte";
-  import TeamNumberModal from "$lib/components/TeamNumberModal.svelte";
+  import ScheduleView from "$lib/components/ScheduleView.svelte";
+  import ScoutForm from "$lib/components/ScoutForm.svelte";
+  import TeamDetail from "$lib/components/TeamDetail.svelte";
+  import TeamsTable from "$lib/components/TeamsTable.svelte";
   import WhiteboardScreen from "$lib/components/WhiteboardScreen.svelte";
   import type { Match, MatchFormValues } from "$lib/components/types";
   import type { MatchPacket, ReleaseAnnouncement, StrategyMatch } from "$lib/native/types";
 
   let createOpen = $state(false);
-  let clearOpen = $state(false);
-  let tbaOpen = $state(false);
-  let qrImportOpen = $state(false);
-  let contributorsOpen = $state(false);
+  let pickerOpen = $state(false);
   let releaseOpen = $state(false);
-  let teamOpen = $state(false);
   let editing = $state<Match | null>(null);
   let qrMatch = $state<Match | null>(null);
-  let toast = $state("");
+  let toastText = $state("");
   let pngRequest = $state(0);
+  let refreshing = $state(false);
   let releaseAnnouncement = $state<ReleaseAnnouncement | null>(null);
 
   function asMatch(match: StrategyMatch): Match {
@@ -42,33 +45,35 @@
     };
   }
   const matches = $derived(app.matches.map(asMatch));
+  const eventName = $derived((eventStore.event.data?.name as string | undefined) ?? null);
+
+  // Keep the shared pick-list and scouting stores pointed at the workspace's event.
+  $effect(() => {
+    if (!session.identity) return;
+    void pickList.load(eventStore.currentEventKey);
+    void scouting.load(eventStore.currentEventKey);
+  });
 
   onMount(() => {
     let active = true;
-    const openExternal = (event: MouseEvent) => {
-      if (!isNativeRuntime() || event.defaultPrevented || event.button !== 0) return;
-      const anchor = event.target instanceof Element ? event.target.closest<HTMLAnchorElement>('a[target="_blank"]') : null;
-      if (!anchor) return;
-      event.preventDefault();
-      void native.platform.openUrl(anchor.href).catch(() => notice("Could not open that link."));
-    };
-    window.addEventListener("click", openExternal);
     void (async () => {
-      await app.init();
-      const [teamNumber, config] = await Promise.all([loadTeamNumber().catch(() => null), native.config.current().catch(() => null)]);
+      await session.load();
+      if (!active || !session.identity) return;
+      await Promise.all([app.init(), eventStore.init()]);
+      const config = await native.config.current().catch(() => null);
       if (!active) return;
-      teamOpen = teamNumber === null;
       const announcement = config?.releaseAnnouncement;
       if (announcement?.enabled && !(await isReleaseDismissed(announcement.id, announcement.showOnce))) {
-        if (active) { releaseAnnouncement = announcement; releaseOpen = true; }
+        releaseAnnouncement = announcement;
+        releaseOpen = true;
       }
     })().catch(() => notice("Some startup services could not be loaded."));
-    return () => { active = false; window.removeEventListener("click", openExternal); };
+    return () => { active = false; };
   });
 
   function notice(message: string) {
-    toast = message;
-    window.setTimeout(() => { if (toast === message) toast = ""; }, 3500);
+    toastText = message;
+    window.setTimeout(() => { if (toastText === message) toastText = ""; }, 3500);
   }
 
   async function create(values: MatchFormValues) {
@@ -82,7 +87,8 @@
 
   async function save(values: MatchFormValues) {
     if (!editing) return;
-    const packet = structuredClone(app.matches.find((match) => match.id === editing?.id)?.packet) as MatchPacket | undefined;
+    const found = app.matches.find((match) => match.id === editing?.id)?.packet;
+    const packet = found ? (clonePacket(found) as MatchPacket) : undefined;
     if (!packet) return;
     packet[0] = values.matchName.trim() || "Untitled match";
     packet[1] = values.redOne; packet[2] = values.redTwo; packet[3] = values.redThree;
@@ -95,120 +101,173 @@
     }
   }
 
-  async function importTba(eventKey: string, teamNumber: string) {
+  async function selectEvent(eventKey: string) {
     try {
-      const rawMatches = await native.tba.matchesAtEvent(eventKey);
-      const teamKey = teamNumber ? `frc${teamNumber.replace(/^frc/i, "")}` : "";
-      const chosen = teamKey ? rawMatches.filter((match) => [...match.alliances.red.team_keys, ...match.alliances.blue.team_keys].includes(teamKey)) : rawMatches;
-      const simple = await native.tba.simpleMatches(chosen);
-      const packets = await Promise.all(simple.map((match) => native.matches.createPacket({
-        matchName: match.match_name,
-        redTeams: [match.red_teams[0] ?? "", match.red_teams[1] ?? "", match.red_teams[2] ?? ""],
-        blueTeams: [match.blue_teams[0] ?? "", match.blue_teams[1] ?? "", match.blue_teams[2] ?? ""],
-        tbaEventKey: eventKey,
-        tbaMatchKey: match.match_key,
-        tbaYear: Number(eventKey.slice(0, 4)) || undefined,
-      })));
-      if (!packets.length) {
-        notice("No matches were found for that event and team.");
-        return;
-      }
-      await app.importPackets(packets);
-      tbaOpen = false;
-      notice(`Imported ${packets.length} match${packets.length === 1 ? "" : "es"} from TBA.`);
+      await eventStore.setEvent(eventKey);
+      app.screen = "schedule";
     } catch {
-      notice("TBA could not load those matches. Check the event key and API settings.");
-      throw new Error("TBA import failed.");
+      notice("Could not switch to that event.");
     }
   }
 
-  async function importQr(packet: MatchPacket) {
-    await app.importPackets([packet]);
-  }
-
-  async function saveTeam(team: string) {
-    await saveTeamNumber(team);
-    teamOpen = false;
-    notice(`Team ${team} saved.`);
+  async function refresh() {
+    refreshing = true;
+    try {
+      await eventStore.refresh();
+    } catch {
+      notice("Could not refresh from The Blue Alliance.");
+    } finally {
+      refreshing = false;
+    }
   }
 
   async function dismissAnnouncement() {
     if (releaseAnnouncement) await dismissRelease(releaseAnnouncement.id, releaseAnnouncement.showOnce);
     releaseOpen = false;
   }
+
+  async function addToPicklist(team: number) {
+    const eventKey = eventStore.currentEventKey;
+    if (!eventKey) {
+      notice("Choose an event first.");
+      return;
+    }
+    try {
+      await pickList.add(eventKey, team);
+      notice(`Added ${team} to the pick list.`);
+    } catch {
+      notice("Could not add to the pick list.");
+    }
+  }
 </script>
 
-<svelte:head><title>Colosseum</title><meta name="description" content="Digital strategy whiteboard for FRC Team 4143 (MARS/WARS)" /></svelte:head>
+<svelte:head><title>Colosseum</title><meta name="description" content="Event scouting hub for FRC Teams 4143 and 4423 (MARS/WARS)" /></svelte:head>
 
-{#if app.loading}<AppLoading />{/if}
 <OrientationWarning />
 
-{#if app.screen === "home"}
-  <div id="home-container" class="flex flex-col w-full h-full touch-none">
-    <HomeToolbar onNew={() => createOpen = true} onTba={() => tbaOpen = true} onImportQr={() => qrImportOpen = true} onClear={() => clearOpen = true} />
-    <MatchList {matches} onOpen={(match) => app.openMatch(match.id)} onEdit={(match) => editing = match} onDuplicate={(match) => app.duplicateMatch(match.id)} onExportPng={(match) => { app.openMatch(match.id); pngRequest += 1; }} onExportQr={(match) => qrMatch = match} onDelete={(match) => app.deleteMatch(match.id)} />
-    <div
-      id="home-bottom-bar"
-      class="w-full bg-[#0d0d0d] flex items-center justify-center border-t border-[#1a1a1a] relative"
-      style="min-height: 4rem; padding-bottom: env(safe-area-inset-bottom, 0px);"
-    >
-      <div class="flex items-center justify-center gap-4">
-        <a
-          href="https://github.com/FRC-Team-4143/colosseum"
-          target="_blank"
-          rel="noopener noreferrer"
-          class="flex items-center justify-center text-[#999] hover:text-[#ccc] transition-colors"
-          aria-label="GitHub"
-        >
-          <i class="fab fa-github text-2xl leading-none"></i>
-        </a>
-        <a
-          href="/privacy"
-          class="text-xs text-[#999] hover:text-[#ccc] transition-colors"
-        >
-          Privacy
-        </a>
-      </div>
-      <div id="last-commit-info" class="absolute left-6 text-[#999] text-xs" style="top: 50%; transform: translateY(-50%);">
-        <a
-          href={buildCommit.url}
-          target="_blank"
-          rel="noopener noreferrer"
-          class="hover:text-[#999] transition-colors flex items-center gap-2"
-          title="latest commit: {buildCommit.message}"
-        >
-          <span class="font-mono">{buildCommit.sha}</span>
-          <span>•</span>
-          <span>{timeAgo(new Date(buildCommit.date))}</span>
-        </a>
-      </div>
-      <button
-        id="contributors-link-btn"
-        class="absolute right-6 flex items-center text-[#999] hover:text-[#ccc] transition-colors text-base"
-        style="top: 50%; transform: translateY(-50%);"
-        onclick={() => contributorsOpen = true}
-      >
-        Team 4143
-      </button>
-    </div>
+{#if session.loading}
+  <AppLoading />
+{:else if !session.identity}
+  <div class="gate">
+    <p class="gate-title">{session.error ?? "You need to sign in to use Colosseum."}</p>
+    <a class="btn-accent gate-btn" href="/api/auth/login">Sign in with Legion</a>
   </div>
+{:else}
+  {#if app.screen !== "whiteboard"}
+    <div id="hub-container">
+      <AppNav
+        screen={app.screen}
+        teamNumber={session.identity.teamNumber}
+        memberName={session.identity.name}
+        {eventName}
+        {refreshing}
+        onNavigate={(next) => (app.screen = next)}
+        onChangeEvent={() => (pickerOpen = true)}
+        onRefresh={refresh}
+        onNewMatch={() => (createOpen = true)}
+        onLogout={() => session.logout()}
+      />
+
+      <div class="hub-body">
+        {#if app.screen === "schedule"}
+          <ScheduleView workspace={session.identity.teamNumber} onNotice={notice} onChangeEvent={() => (pickerOpen = true)} />
+          {#if matches.length}
+            <div class="saved-boards">
+              <div class="saved-boards-head">Your saved boards</div>
+              <div class="saved-boards-list">
+                <MatchList
+                  {matches}
+                  onOpen={(match) => app.openMatch(match.id)}
+                  onEdit={(match) => (editing = match)}
+                  onDuplicate={(match) => app.duplicateMatch(match.id)}
+                  onExportPng={(match) => { app.openMatch(match.id); pngRequest += 1; }}
+                  onExportQr={(match) => (qrMatch = match)}
+                  onDelete={(match) => app.deleteMatch(match.id)}
+                />
+              </div>
+            </div>
+          {/if}
+        {:else if app.screen === "teams"}
+          <TeamsTable onAddToPicklist={addToPicklist} />
+        {:else if app.screen === "team" && app.selectedTeam !== null}
+          <TeamDetail
+            team={app.selectedTeam}
+            onNotice={notice}
+            onBack={() => (app.screen = "teams")}
+            onAddToPicklist={addToPicklist}
+          />
+        {:else if app.screen === "picklist"}
+          <PickList onNotice={notice} />
+        {:else if app.screen === "scout" && app.scoutMatchKey}
+          <ScoutForm
+            matchKey={app.scoutMatchKey}
+            team={app.scoutTeam}
+            onNotice={notice}
+            onBack={() => (app.screen = "schedule")}
+          />
+        {/if}
+      </div>
+    </div>
+  {/if}
+
+  <WhiteboardScreen {pngRequest} onNotice={notice} />
+  <MatchEditorModal open={createOpen} onSave={create} onClose={() => (createOpen = false)} />
+  <MatchEditorModal open={editing !== null} match={editing} onSave={save} onClose={() => (editing = null)} />
+  <EventPickerModal open={pickerOpen} current={eventStore.currentEventKey} onSelect={selectEvent} onClose={() => (pickerOpen = false)} />
+  <QrExportModal open={qrMatch !== null} packet={qrMatch ? app.matches.find((match) => match.id === qrMatch?.id)?.packet ?? null : null} matchName={qrMatch?.matchName || "this match"} onNotice={notice} onClose={() => (qrMatch = null)} />
+  <ReleaseAnnouncementModal open={releaseOpen} announcement={releaseAnnouncement} onDismiss={dismissAnnouncement} onClose={() => (releaseOpen = false)} />
 {/if}
 
-<WhiteboardScreen {pngRequest} onNotice={notice} />
-<MatchEditorModal open={createOpen} onSave={create} onClose={() => createOpen = false} />
-<MatchEditorModal open={editing !== null} match={editing} onSave={save} onClose={() => editing = null} />
-<ConfirmModal open={clearOpen} title="Clear All Data?" message="This will permanently delete all matches and data. This action cannot be undone." confirmLabel="Clear All" destructive onConfirm={async () => { await app.clearAll(); clearOpen = false; }} onClose={() => clearOpen = false} />
-<TbaImportModal open={tbaOpen} onImport={importTba} onClose={() => tbaOpen = false} />
-<QrImportModal open={qrImportOpen} onImport={importQr} onNotice={notice} onClose={() => qrImportOpen = false} />
-<QrExportModal open={qrMatch !== null} packet={qrMatch ? app.matches.find((match) => match.id === qrMatch?.id)?.packet ?? null : null} matchName={qrMatch?.matchName || "this match"} onNotice={notice} onClose={() => qrMatch = null} />
-<ContributorsModal open={contributorsOpen} onClose={() => contributorsOpen = false} />
-<ReleaseAnnouncementModal open={releaseOpen} announcement={releaseAnnouncement} onDismiss={dismissAnnouncement} onClose={() => releaseOpen = false} />
-<TeamNumberModal open={teamOpen} onSave={saveTeam} />
-{#if toast}<button class="toast" onclick={() => toast = ""} aria-live="polite">{toast}</button>{/if}
+{#if toastText}<button class="toast" onclick={() => (toastText = "")} aria-live="polite">{toastText}</button>{/if}
+{#each toast.messages as message (message.id)}
+  <button class="toast toast-{message.kind}" onclick={() => toast.dismiss(message.id)}>{message.text}</button>
+{/each}
 
 <style>
-  /* Transient status messages have no pre-rewrite counterpart; styled to match
-     the surrounding surfaces rather than introduce a new palette. */
+  #hub-container {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+  }
+  .hub-body {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    background: #0a0a0a;
+  }
+  .saved-boards {
+    border-top: 1px solid #2a1a1a;
+    display: flex;
+    flex-direction: column;
+  }
+  .saved-boards-head {
+    padding: 0.6rem 1rem;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #9a7878;
+  }
+  .saved-boards-list {
+    height: 38vh;
+    display: flex;
+    flex-direction: column;
+  }
+  .gate {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1.25rem;
+    height: 100%;
+    padding: 2rem;
+    text-align: center;
+  }
+  .gate-title { color: #f0e8e8; font-size: 1.05rem; }
+  .gate-btn { padding: 0.75rem 1.5rem; text-decoration: none; }
+
   .toast {
     position: fixed;
     bottom: max(1.25rem, env(safe-area-inset-bottom));
@@ -217,11 +276,15 @@
     max-width: calc(100vw - 2rem);
     padding: 0.75rem 1.25rem;
     transform: translateX(-50%);
-    color: #e8e8e8;
-    border: 1px solid #2a2a2a;
+    color: #f0e8e8;
+    border: 1px solid #2a1a1a;
     border-radius: 6px;
-    background: #141414;
+    background: #111111;
     font-family: inherit;
     font-size: 1rem;
   }
+  .toast-warning { border-color: #7a5a1a; }
+  .toast-error { border-color: #7a2a1a; }
+  /* Stack store toasts above the transient one. */
+  .toast + .toast { bottom: calc(max(1.25rem, env(safe-area-inset-bottom)) + 3.5rem); }
 </style>

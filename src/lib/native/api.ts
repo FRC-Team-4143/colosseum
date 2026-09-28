@@ -1,10 +1,9 @@
-import { invoke, type InvokeArgs } from "@tauri-apps/api/core";
+import type { InvokeArgs } from "./web";
 
 import type {
-  BoardMode, BoardState, BoardTool, Contributor, CreateMatchInput, FieldRobotPositions,
+  BoardMode, BoardState, BoardTool, CreateMatchInput, FieldRobotPositions,
   FuzzyBatchItem, FuzzyBatchMatch, FuzzyMatchResult, JsonValue, MatchPacket, NativeConfig,
-  PdfDocumentPlan, QrProgress, StatboticsMatch, StatboticsTeamYear, StatboticsYear, TbaEvent,
-  TbaMatch, TbaSimpleEvent, TbaSimpleMatch,
+  PdfDocumentPlan, TbaEvent, TbaMatch, TbaSimpleEvent, TbaSimpleMatch,
 } from "./types";
 
 export class NativeCommandError extends Error {
@@ -18,10 +17,16 @@ export class NativeCommandError extends Error {
   }
 }
 
-/** One typed boundary for all Tauri calls. Do not use it from pointer-move paths. */
+/**
+ * One typed boundary for all native calls. Do not use it from pointer-move paths.
+ *
+ * Colosseum is a browser app with no Rust backend: every call is routed to the
+ * JavaScript implementation in `./web` (a lazily-imported, code-split chunk).
+ */
 async function call<TResult>(command: string, args?: InvokeArgs): Promise<TResult> {
   try {
-    return await invoke<TResult>(command, args);
+    const { webInvoke } = await import("./web");
+    return await webInvoke<TResult>(command, args);
   } catch (error) {
     throw new NativeCommandError(command, error);
   }
@@ -40,16 +45,6 @@ export const native = {
     clear: () => call<void>("storage_clear"),
     entries: () => call<Array<[string, JsonValue]>>("storage_entries"),
   },
-  model: {
-    loadPackets: () => call<MatchPacket[]>("model_load_packets"),
-    addPacket: (packet: MatchPacket) => call<string>("model_add_packet", { packet }),
-    /** Atomic import path for TBA, QR, and cloud packets. */
-    addPackets: (packets: MatchPacket[]) => call<string[]>("model_add_packets", { packets }),
-    /** Atomic normalized replacement for a completed form or canvas commit. */
-    replacePacket: (packet: MatchPacket) => call<string>("model_replace_packet", { packet }),
-    deleteMatch: (id: string) => call<void>("model_delete_match", { id }),
-    clearMatches: () => call<void>("model_clear_matches"),
-  },
   matches: {
     createPacket: (input: CreateMatchInput) => call<MatchPacket>("match_create_packet", { ...input }),
     normalizePacket: (packet: MatchPacket) => call<MatchPacket>("match_normalize_packet", { packet }),
@@ -65,35 +60,14 @@ export const native = {
     redo: () => call<string | null>("board_redo"),
   },
   tba: {
-    setApiKey: (apiKey: string) => call<void>("tba_set_api_key", { apiKey }),
-    hasApiKey: () => call<boolean>("tba_has_api_key"),
     events: (year: number) => call<TbaEvent[]>("tba_events", { year }),
     matchesAtEvent: (eventKey: string) => call<TbaMatch[]>("tba_matches_at_event", { eventKey }),
-    teamMatches: (teamKey: string, eventKey: string) => call<TbaMatch[]>("tba_team_matches", { teamKey, eventKey }),
-    teamEvents: (teamKey: string, year: number) => call<TbaEvent[]>("tba_team_events", { teamKey, year }),
     teamsAtEvent: (eventKey: string) => call<string[]>("tba_teams_at_event", { eventKey }),
     simpleEvents: (events: TbaEvent[]) => call<TbaSimpleEvent[]>("tba_simple_events", { events }),
     simpleMatches: (matches: TbaMatch[]) => call<TbaSimpleMatch[]>("tba_simple_matches", { matches }),
   },
-  statbotics: {
-    cached: (matchKey: string) => call<JsonValue | null>("statbotics_cached", { matchKey }),
-    cacheTimestamp: (matchKey: string) => call<number | null>("statbotics_cache_timestamp", { matchKey }),
-    clearCache: () => call<number>("statbotics_clear_cache"),
-    fetch: (endpoint: string) => call<JsonValue>("statbotics_fetch", { endpoint }),
-    matchKey: (eventKey: string, matchName: string) => call<string>("statbotics_match_key", { eventKey, matchName }),
-    match: (matchKey: string) => call<StatboticsMatch>("statbotics_match", { matchKey }),
-    year: (year: number) => call<StatboticsYear>("statbotics_year", { year }),
-    teamYear: (team: number, year: number) => call<StatboticsTeamYear>("statbotics_team_year", { team, year }),
-  },
-  github: {
-    teams: () => call<string[]>("github_teams"),
-    contributors: (count?: number) => call<Contributor[]>("github_contributors", { count }),
-  },
   qr: {
     encode: (payload: string) => call<string[]>("qr_encode", { payload }),
-    reset: () => call<void>("qr_reset"),
-    receive: (frame: string) => call<QrProgress>("qr_receive", { frame }),
-    restorePacket: (payload: string) => call<MatchPacket>("qr_restore_packet", { payload }),
   },
   search: {
     match: (searchTerm: string, target: string, originalTarget?: string) =>

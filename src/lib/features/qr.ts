@@ -1,23 +1,16 @@
 import { native } from "$lib/native/api";
-import type { MatchPacket, QrProgress } from "$lib/native/types";
+import type { MatchPacket } from "$lib/native/types";
 
 const DEFAULT_FRAME_DURATION_MS = 600;
 const DEFAULT_QR_SIZE = 480;
 
 type QrCodeModule = typeof import("qrcode");
-type QrScannerConstructor = typeof import("qr-scanner").default;
 
 let qrCodeModule: Promise<QrCodeModule> | null = null;
-let qrScannerConstructor: Promise<QrScannerConstructor> | null = null;
 
 function loadQrCode(): Promise<QrCodeModule> {
   qrCodeModule ??= import("qrcode");
   return qrCodeModule;
-}
-
-function loadQrScanner(): Promise<QrScannerConstructor> {
-  qrScannerConstructor ??= import("qr-scanner").then((module) => module.default);
-  return qrScannerConstructor;
 }
 
 export interface QrAnimationStatus {
@@ -174,103 +167,5 @@ export class QrFramePlayer {
       total: this.frames.length,
       progress: Math.round(((this.#frameIndex + 1) / this.frames.length) * 100),
     });
-  }
-}
-
-/** Restores the missing local-ID slot after the native receiver completes a stream. */
-export function restoreQrPacket(payload: string): Promise<MatchPacket> {
-  return native.qr.restorePacket(payload);
-}
-
-export interface CameraDevice { id: string; label: string; }
-export interface QrScanCallbacks {
-  onProgress: (progress: QrProgress) => void | Promise<void>;
-  onError?: (error: Error) => void;
-}
-
-/**
- * A scanner session owns the camera stream and QR worker. Always call dispose
- * on modal close/unmount; completion also stops the camera immediately.
- */
-export class QrScanSession {
-  #scanner: InstanceType<QrScannerConstructor> | null = null;
-  #video: HTMLVideoElement | null = null;
-  #callbacks: QrScanCallbacks | null = null;
-  #stopped = false;
-  #receiving = false;
-
-  static async listCameras(requestLabels = true): Promise<CameraDevice[]> {
-    const QrScanner = await loadQrScanner();
-    return QrScanner.listCameras(requestLabels);
-  }
-
-  async start(video: HTMLVideoElement, callbacks: QrScanCallbacks, cameraId?: string): Promise<void> {
-    await this.dispose();
-    this.#video = video;
-    this.#callbacks = callbacks;
-    this.#stopped = false;
-    await native.qr.reset();
-    const QrScanner = await loadQrScanner();
-    const scanner = new QrScanner(video, (result) => { void this.#receive(result.data); }, {
-      preferredCamera: cameraId ?? "environment",
-      maxScansPerSecond: 8,
-      highlightScanRegion: true,
-      highlightCodeOutline: true,
-      returnDetailedScanResult: true,
-      onDecodeError: (error) => {
-        // "No QR code found" is normal for almost every sampled frame.
-        if (error !== QrScanner.NO_QR_CODE_FOUND) callbacks.onError?.(new Error(String(error)));
-      },
-    });
-    this.#scanner = scanner;
-    try {
-      await scanner.start();
-    } catch (error) {
-      await this.dispose();
-      throw error;
-    }
-  }
-
-  async setCamera(cameraId: string): Promise<void> {
-    if (!this.#scanner) throw new Error("QR scanner is not running");
-    await this.#scanner.setCamera(cameraId);
-  }
-
-  async dispose(): Promise<void> {
-    this.#stopped = true;
-    this.#scanner?.destroy();
-    this.#scanner = null;
-    const video = this.#video;
-    this.#video = null;
-    this.#callbacks = null;
-    video?.srcObject && (video.srcObject as MediaStream).getTracks().forEach((track) => track.stop());
-    if (video) video.srcObject = null;
-  }
-
-  async #receive(frame: string): Promise<void> {
-    if (this.#stopped || this.#receiving || !this.#callbacks) return;
-    this.#receiving = true;
-    const callbacks = this.#callbacks;
-    try {
-      const progress = await native.qr.receive(frame);
-      if (progress.status === "complete") {
-        // Stop accepting frames before the importer awaits persistence. This
-        // prevents a fast camera from completing the same repeating stream twice.
-        this.#stopped = true;
-        this.#scanner?.stop();
-        // A consumer error must never leave the camera active after a valid import.
-        try {
-          await callbacks.onProgress(progress);
-        } finally {
-          await this.dispose();
-        }
-      } else {
-        await callbacks.onProgress(progress);
-      }
-    } catch (error) {
-      callbacks.onError?.(error instanceof Error ? error : new Error(String(error)));
-    } finally {
-      this.#receiving = false;
-    }
   }
 }

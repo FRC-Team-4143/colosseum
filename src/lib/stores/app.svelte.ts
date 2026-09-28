@@ -1,31 +1,29 @@
 import { native } from "$lib/native/api";
-import type { Alliance, CreateMatchInput, MatchPacket, StrategyMatch } from "$lib/native/types";
-import { readLegacyMatchPackets } from "$lib/features/legacy-migration";
+import type { CreateMatchInput, MatchPacket, StrategyMatch } from "$lib/native/types";
+import { ApiError } from "$lib/api/http";
+import * as boards from "$lib/api/whiteboards";
+import { clonePacket } from "$lib/features/runtime";
 
 import { toast } from "./toast.svelte";
 
-export type Screen = "home" | "whiteboard";
+export type Screen = "schedule" | "teams" | "team" | "picklist" | "scout" | "whiteboard";
 
-let screen = $state<Screen>("home");
+let screen = $state<Screen>("schedule");
 let packets = $state<MatchPacket[]>([]);
 let activeMatchId = $state<string | null>(null);
+let selectedTeam = $state<number | null>(null);
+let scoutMatchKey = $state<string | null>(null);
+let scoutTeam = $state<number | null>(null);
 let loading = $state(true);
 let saving = $state(false);
 let initialized = false;
 let initPromise: Promise<void> | null = null;
 let writeQueue: Promise<void> = Promise.resolve();
 let pendingWrites = 0;
-const LEGACY_MIGRATION_KEY = "legacyIndexedDbMigrationV1";
 
-export interface MatchInfoUpdate {
-  matchName: string;
-  redOne: string;
-  redTwo: string;
-  redThree: string;
-  blueOne: string;
-  blueTwo: string;
-  blueThree: string;
-}
+// id -> the server's `updatedAt` for that board when we last saw it. Sent back on a PUT so
+// the server can flag a write that would clobber another device's newer edit.
+const seenAt = new Map<string, string>();
 
 function project(packet: MatchPacket): StrategyMatch {
   return {
@@ -47,20 +45,15 @@ function project(packet: MatchPacket): StrategyMatch {
   };
 }
 
-function asAlliance(teams: readonly string[]): Alliance {
-  if (teams.length !== 3) throw new Error("A match requires exactly three teams per alliance.");
-  return [teams[0] ?? "", teams[1] ?? "", teams[2] ?? ""];
-}
-
 function setPackets(next: MatchPacket[]): void {
-  packets = next.map((packet) => structuredClone(packet));
+  packets = next.map((packet) => clonePacket(packet));
 }
 
 function replaceInMemory(packet: MatchPacket): void {
   const index = packets.findIndex((candidate) => candidate[7] === packet[7]);
-  if (index === -1) throw new Error("Cannot update a match that is not loaded.");
+  if (index === -1) return;
   const next = [...packets];
-  next[index] = structuredClone(packet);
+  next[index] = clonePacket(packet);
   packets = next;
 }
 
@@ -75,32 +68,97 @@ function queueWrite<T>(operation: () => Promise<T>): Promise<T> {
   });
 }
 
+/** Pull the current server copy of one board into memory (best effort). */
+async function refreshBoard(id: string): Promise<void> {
+  try {
+    const fresh = await boards.getBoard(id);
+    seenAt.set(id, fresh.updatedAt);
+    replaceInMemory(fresh.packet);
+  } catch {
+    /* offline or gone — keep the local copy */
+  }
+}
+
+async function persist(packet: MatchPacket): Promise<void> {
+  const normalized = await native.matches.normalizePacket(packet);
+  const id = normalized[7];
+  try {
+    const saved = await boards.updateBoard(id, normalized, seenAt.get(id));
+    seenAt.set(id, saved.updatedAt);
+  } catch (error) {
+    if (error instanceof ApiError && error.status === 409) {
+      toast.show(
+        "This board was changed on another device — your latest edit was saved over it.",
+        "warning",
+        8000,
+      );
+      const forced = await boards.updateBoard(id, normalized);
+      seenAt.set(id, forced.updatedAt);
+    } else if (error instanceof ApiError && error.status === 404) {
+      const created = await boards.createBoard(normalized);
+      seenAt.set(id, created.updatedAt);
+    } else {
+      throw error;
+    }
+  }
+  replaceInMemory(normalized);
+}
+
 async function createMatch(input: CreateMatchInput): Promise<string>;
 async function createMatch(matchName: string, red: readonly string[], blue: readonly string[]): Promise<string>;
-async function createMatch(inputOrName: CreateMatchInput | string, red?: readonly string[], blue?: readonly string[]): Promise<string> {
-  const input: CreateMatchInput = typeof inputOrName === "string"
-    ? { matchName: inputOrName, redTeams: asAlliance(red ?? []), blueTeams: asAlliance(blue ?? []) }
-    : inputOrName;
+async function createMatch(
+  inputOrName: CreateMatchInput | string,
+  red?: readonly string[],
+  blue?: readonly string[],
+): Promise<string> {
+  const input: CreateMatchInput =
+    typeof inputOrName === "string"
+      ? {
+          matchName: inputOrName,
+          redTeams: [red?.[0] ?? "", red?.[1] ?? "", red?.[2] ?? ""],
+          blueTeams: [blue?.[0] ?? "", blue?.[1] ?? "", blue?.[2] ?? ""],
+        }
+      : inputOrName;
   return queueWrite(async () => {
     const packet = await native.matches.createPacket(input);
-    const id = await native.model.addPacket(packet);
-    packets = [...packets, structuredClone(packet)];
-    return id;
+    const created = await boards.createBoard(packet);
+    seenAt.set(created.id, created.updatedAt);
+    packets = [...packets, clonePacket(created.packet)];
+    return created.id;
   });
 }
 
 /**
- * Persistent match state. Canvas code should update its in-memory scene freely
- * and call commitPacket only at a completed edit boundary (pointer-up/debounce).
+ * Persistent match state. Canvas code updates its in-memory scene freely and calls
+ * `commitPacket` only at a completed edit boundary (pointer-up / debounce). Boards live on
+ * the server, scoped to the workspace; this store never persists them locally.
  */
 export const app = {
   get screen(): Screen { return screen; },
+  /** Direct navigation between the hub screens. `whiteboard` / `team` / `scout` are
+   * entered through `openMatch*` / `openTeam` / `openScout`, not this setter. */
+  set screen(next: Screen) { screen = next; },
+
+  openTeam(team: number): void {
+    selectedTeam = team;
+    screen = "team";
+  },
+
+  openScout(matchKey: string, team: number | null = null): void {
+    scoutMatchKey = matchKey;
+    scoutTeam = team;
+    screen = "scout";
+  },
+
   get matches(): StrategyMatch[] { return packets.map(project); },
   get activeMatch(): StrategyMatch | null {
     const packet = activeMatchId === null ? undefined : packets.find((item) => item[7] === activeMatchId);
     return packet ? project(packet) : null;
   },
   get activeMatchId(): string | null { return activeMatchId; },
+  get selectedTeam(): number | null { return selectedTeam; },
+  get scoutMatchKey(): string | null { return scoutMatchKey; },
+  get scoutTeam(): number | null { return scoutTeam; },
   get loading(): boolean { return loading; },
   get saving(): boolean { return saving; },
 
@@ -110,27 +168,14 @@ export const app = {
     initPromise = (async () => {
       loading = true;
       try {
-        let loaded = await native.model.loadPackets();
-        const migrationComplete = await native.storage.get(LEGACY_MIGRATION_KEY).catch(() => null) === true;
-        if (!migrationComplete) {
-          if (loaded.length === 0) {
-            const legacy = await readLegacyMatchPackets();
-            const normalized = (await Promise.allSettled(legacy.map((packet) => native.matches.normalizePacket(packet))))
-              .filter((result): result is PromiseFulfilledResult<MatchPacket> => result.status === "fulfilled")
-              .map((result) => result.value);
-            if (normalized.length > 0) {
-              await native.model.addPackets(normalized);
-              loaded = await native.model.loadPackets();
-              toast.show(`Migrated ${normalized.length} match${normalized.length === 1 ? "" : "es"} from the previous Colosseum install.`, "success");
-            }
-          }
-          await native.storage.set(LEGACY_MIGRATION_KEY, true);
-        }
-        setPackets(loaded);
+        const { boards: list } = await boards.listBoards();
+        seenAt.clear();
+        for (const board of list) seenAt.set(board.id, board.updatedAt);
+        setPackets(list.map((board) => board.packet));
         initialized = true;
       } catch (error) {
-        console.error("Failed to load Colosseum data", error);
-        toast.show("Could not load saved matches. Your existing data was not changed.", "error");
+        console.error("Failed to load whiteboards", error);
+        toast.show("Could not load saved boards.", "error");
       } finally {
         loading = false;
         initPromise = null;
@@ -143,17 +188,43 @@ export const app = {
     if (!packets.some((packet) => packet[7] === id)) return false;
     activeMatchId = id;
     screen = "whiteboard";
+    void refreshBoard(id);
     return true;
   },
 
   closeMatch(): void {
     activeMatchId = null;
-    screen = "home";
+    screen = "schedule";
+  },
+
+  /** Open the whiteboard for a TBA match, creating its board on first use. */
+  async openMatchByTbaKey(
+    tbaMatchKey: string,
+    red: readonly string[],
+    blue: readonly string[],
+    matchName: string,
+    tbaEventKey: string,
+    tbaYear?: number,
+  ): Promise<string> {
+    const existing = packets.find((packet) => packet[10] === tbaMatchKey);
+    if (existing) {
+      this.openMatch(existing[7]);
+      return existing[7];
+    }
+    const id = await createMatch({
+      matchName,
+      redTeams: [red[0] ?? "", red[1] ?? "", red[2] ?? ""],
+      blueTeams: [blue[0] ?? "", blue[1] ?? "", blue[2] ?? ""],
+      tbaEventKey,
+      tbaMatchKey,
+      ...(tbaYear ? { tbaYear } : {}),
+    });
+    this.openMatch(id);
+    return id;
   },
 
   createMatch,
 
-  /** Compatibility convenience for basic create dialogs. */
   createBasicMatch(matchName: string, red: readonly string[], blue: readonly string[]): Promise<string> {
     return createMatch(matchName, red, blue);
   },
@@ -161,9 +232,7 @@ export const app = {
   async duplicateMatch(id: string): Promise<string> {
     const source = packets.find((packet) => packet[7] === id);
     if (!source) throw new Error("Cannot duplicate a match that is not loaded.");
-
     return queueWrite(async () => {
-      // Ask native code for an ID, then retain the source's completed board state.
       const fresh = await native.matches.createPacket({
         matchName: `Copy of ${source[0]}`,
         redTeams: [source[1], source[2], source[3]],
@@ -172,61 +241,29 @@ export const app = {
         ...(source[10] ? { tbaMatchKey: source[10] } : {}),
         ...(source[11] !== null && source[11] !== undefined ? { tbaYear: source[11] } : {}),
       });
-      const copy = structuredClone(source);
+      const copy = clonePacket(source);
       copy[0] = fresh[0];
       copy[7] = fresh[7];
-      const newId = await native.model.addPacket(copy);
-      packets = [...packets, copy];
-      return newId;
+      copy[10] = fresh[10] ?? null;
+      const created = await boards.createBoard(copy);
+      seenAt.set(created.id, created.updatedAt);
+      packets = [...packets, clonePacket(created.packet)];
+      return created.id;
     });
   },
 
-  /** Persist one fully composed packet atomically after a form or canvas edit. */
-  async commitPacket(packet: MatchPacket): Promise<void> {
-    await queueWrite(async () => {
-      await native.model.replacePacket(packet);
-      replaceInMemory(packet);
-    });
-  },
-
-  async updateMatch(id: string, update: MatchInfoUpdate): Promise<void> {
-    const source = packets.find((packet) => packet[7] === id);
-    if (!source) throw new Error("Cannot update a match that is not loaded.");
-    const next = structuredClone(source);
-    next[0] = update.matchName;
-    next[1] = update.redOne;
-    next[2] = update.redTwo;
-    next[3] = update.redThree;
-    next[4] = update.blueOne;
-    next[5] = update.blueTwo;
-    next[6] = update.blueThree;
-    await this.commitPacket(next);
-  },
-
-  /** Import many validated packets in one native transaction, not one IPC call per match. */
-  async importPackets(imported: MatchPacket[]): Promise<string[]> {
-    if (imported.length === 0) return [];
-    return queueWrite(async () => {
-      const ids = await native.model.addPackets(imported);
-      setPackets(await native.model.loadPackets());
-      return ids;
-    });
+  /** Persist one fully composed packet after a form or canvas edit. */
+  commitPacket(packet: MatchPacket): Promise<void> {
+    return queueWrite(() => persist(packet));
   },
 
   async deleteMatch(id: string): Promise<void> {
     if (!packets.some((packet) => packet[7] === id)) return;
     await queueWrite(async () => {
-      await native.model.deleteMatch(id);
+      await boards.deleteBoard(id);
+      seenAt.delete(id);
       packets = packets.filter((packet) => packet[7] !== id);
       if (activeMatchId === id) this.closeMatch();
-    });
-  },
-
-  async clearAll(): Promise<void> {
-    await queueWrite(async () => {
-      await native.model.clearMatches();
-      packets = [];
-      this.closeMatch();
     });
   },
 };
