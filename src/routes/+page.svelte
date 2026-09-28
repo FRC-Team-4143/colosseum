@@ -141,7 +141,7 @@
   }
 </script>
 
-<svelte:head><title>Colosseum</title><meta name="description" content="Event scouting hub for FRC Teams 4143 and 4423 (MARS/WARS)" /></svelte:head>
+<svelte:head><title>Colosseum</title><meta name="description" content="Event data and match-planning hub for FRC Teams 4143 and 4423 (MARS/WARS)" /></svelte:head>
 
 <OrientationWarning />
 

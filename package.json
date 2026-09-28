@@ -1,7 +1,7 @@
 {
   "name": "colosseum",
   "version": "2026.6.0",
-  "description": "Event scouting hub for FRC Teams 4143 and 4423 (MARS/WARS)",
+  "description": "Event data and match-planning hub for FRC Teams 4143 and 4423 (MARS/WARS)",
   "homepage": "https://github.com/FRC-Team-4143/colosseum",
   "author": {
     "name": "MARS/WARS Robotics (FRC Team 4143)"
