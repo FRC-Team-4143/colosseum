@@ -1,6 +1,6 @@
 # Colosseum
 
-The event scouting hub for **FRC Teams 4143 and 4423 (MARS/WARS)**.
+The event data and match-planning hub for **FRC Teams 4143 and 4423 (MARS/WARS)**.
 
 Pick a competition and Colosseum pulls the schedule, every team's stats (rankings,
 OPR/DPR/CCWM, component OPRs, optional Statbotics EPA) and live match results from The
