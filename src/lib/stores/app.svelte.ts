@@ -6,14 +6,12 @@ import { clonePacket } from "$lib/features/runtime";
 
 import { toast } from "./toast.svelte";
 
-export type Screen = "schedule" | "teams" | "team" | "picklist" | "scout" | "whiteboard";
+export type Screen = "schedule" | "teams" | "team" | "picklist" | "whiteboard";
 
 let screen = $state<Screen>("schedule");
 let packets = $state<MatchPacket[]>([]);
 let activeMatchId = $state<string | null>(null);
 let selectedTeam = $state<number | null>(null);
-let scoutMatchKey = $state<string | null>(null);
-let scoutTeam = $state<number | null>(null);
 let loading = $state(true);
 let saving = $state(false);
 let initialized = false;
@@ -135,19 +133,13 @@ async function createMatch(
  */
 export const app = {
   get screen(): Screen { return screen; },
-  /** Direct navigation between the hub screens. `whiteboard` / `team` / `scout` are
-   * entered through `openMatch*` / `openTeam` / `openScout`, not this setter. */
+  /** Direct navigation between the hub screens. `whiteboard` / `team` are entered
+   * through `openMatch*` / `openTeam`, not this setter. */
   set screen(next: Screen) { screen = next; },
 
   openTeam(team: number): void {
     selectedTeam = team;
     screen = "team";
-  },
-
-  openScout(matchKey: string, team: number | null = null): void {
-    scoutMatchKey = matchKey;
-    scoutTeam = team;
-    screen = "scout";
   },
 
   get matches(): StrategyMatch[] { return packets.map(project); },
@@ -157,8 +149,6 @@ export const app = {
   },
   get activeMatchId(): string | null { return activeMatchId; },
   get selectedTeam(): number | null { return selectedTeam; },
-  get scoutMatchKey(): string | null { return scoutMatchKey; },
-  get scoutTeam(): number | null { return scoutTeam; },
   get loading(): boolean { return loading; },
   get saving(): boolean { return saving; },
 

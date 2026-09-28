@@ -5,7 +5,6 @@
 - [Schedule](#schedule)
 - [Teams and stats](#teams-and-stats)
 - [Pick list](#pick-list)
-- [Scouting](#scouting)
 - [Whiteboard](#whiteboard)
 
 ## Signing in
@@ -13,8 +12,7 @@
 Open `https://colosseum.marswars.org`. It bounces you to Legion to approve the sign-in in
 Slack, then back. Your Legion **team number** decides which workspace you land in — 4143
 or 4423. The two workspaces are separate: each has its own selected event, pick list, and
-whiteboards. TBA stats, scouting records, and team notes for an event are shared between
-both.
+whiteboards. TBA stats and team notes for an event are shared between both.
 
 If your team number isn't 4143 or 4423 you'll see "Not authorized" — ask a mentor to
 check your Legion profile.
@@ -29,10 +27,8 @@ event.
 ## Schedule
 
 Every match in playing order, with live scores once a match is played and your team
-underlined. Each row has:
-
-- **Scout** — record what a team did in that match (see below).
-- **Whiteboard** — open (or start) the strategy board for that match.
+underlined. Each row has a **Whiteboard** button to open (or start) the strategy board
+for that match.
 
 Below the schedule, **Your saved boards** lists whiteboards you've opened, with edit /
 duplicate / export / delete.
@@ -40,10 +36,9 @@ duplicate / export / delete.
 ## Teams and stats
 
 The **Teams** tab is a sortable table of every team at the event: rank, record, the
-event's ranking score, OPR / DPR / CCWM, an optional Statbotics **EPA** column, and a
-**Scouted** count. "Show N detail columns" adds the year's component OPRs. Click a team
-for its detail page: stat cards, a shared note, its scouting averages, and its match list
-(each with Scout / Whiteboard).
+event's ranking score, OPR / DPR / CCWM, and an optional Statbotics **EPA** column.
+"Show N detail columns" adds the year's component OPRs. Click a team for its detail
+page: stat cards, a shared note, and its match list with a Whiteboard button on each.
 
 The **＋** on a table row or **Add to pick list** on a team page drops the team onto your
 pick list.
@@ -53,14 +48,6 @@ pick list.
 Your workspace's list for the current event (4143 and 4423 keep separate lists). Add a
 team by number, reorder with ▲/▼, type a per-row note, and cycle a row's tag between
 **picked** / **DNP** / none. Everyone on your team sees the same list, live.
-
-## Scouting
-
-From a **Scout** button, pick one of the six team slots (slots you've already scouted show
-a ✓), fill the form — piece counts, endgame and defense ratings, a broke-down toggle,
-notes — and **Save record**. One record per team per match; saving again overwrites it.
-Records are shared across 4143 and 4423 for that event, and roll up into each team's
-averages on its detail page.
 
 ## Whiteboard
 

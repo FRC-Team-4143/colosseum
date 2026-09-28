@@ -7,7 +7,7 @@ from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db, init_db
-from app.routers import auth, meta, notes, picklist, scouting, statbotics, tba, whiteboards
+from app.routers import auth, meta, notes, picklist, statbotics, tba, whiteboards
 from app.services.scheduler import create_scheduler
 
 # The built SvelteKit SPA. In the Docker image it sits at /app/static (next to the app
@@ -34,7 +34,6 @@ app.include_router(tba.router)
 app.include_router(meta.router)
 app.include_router(notes.router)
 app.include_router(picklist.router)
-app.include_router(scouting.router)
 app.include_router(statbotics.router)
 app.include_router(whiteboards.router)
 

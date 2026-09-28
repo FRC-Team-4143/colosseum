@@ -69,7 +69,6 @@
               {#each row.blue as team, i}{#if i > 0}{" "}{/if}<span class:ours={isOurs(team)}>{team}</span>{/each}
             </span>
             <span class="row-actions">
-              <button class="btn-secondary" onclick={() => app.openScout(row.key)}>Scout</button>
               <button class="btn-secondary" onclick={() => openBoard(row)}>Whiteboard</button>
             </span>
           </li>
