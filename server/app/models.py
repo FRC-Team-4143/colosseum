@@ -18,8 +18,8 @@ class AppSetting(Base):
 class Member(Base):
     """Legion roster mirror. Data flows one way, Legion -> Colosseum, on an hourly pull;
     Colosseum never writes it back. NOT used for authorization — that's the live `mw_sso`
-    cookie's `team_number` claim (see services/sso.py). Kept for future features (scout
-    attribution lookups, rosters, leaderboards)."""
+    cookie's `team_number` claim (see services/sso.py). Kept for future features (rosters,
+    leaderboards)."""
     __tablename__ = "members"
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     member_code: Mapped[Optional[str]] = mapped_column(String(8), unique=True, nullable=True, index=True)
@@ -76,29 +76,9 @@ class PickListEntry(Base):
     )
 
 
-class ScoutEntry(Base):
-    """One manual scouting record for a team in a match. Shared across both workspaces
-    (keyed by event + match + team, not by team_number) so 4143 and 4423 at the same
-    event pool their scouting; last write wins. `values_json` holds the form values as
-    defined by src/lib/scouting/schema.ts."""
-    __tablename__ = "scout_entries"
-    __table_args__ = (UniqueConstraint("event_key", "match_key", "team", name="uq_scout_entry"),)
-    id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    event_key: Mapped[str] = mapped_column(String(20), nullable=False, index=True)
-    match_key: Mapped[str] = mapped_column(String(40), nullable=False)
-    team: Mapped[int] = mapped_column(Integer, nullable=False, index=True)
-    scout_name: Mapped[str] = mapped_column(String(120), nullable=False, default="")
-    scout_member_code: Mapped[str] = mapped_column(String(8), nullable=False, default="")
-    values_json: Mapped[str] = mapped_column(Text, nullable=False, default="{}")
-    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.utcnow)
-    updated_at: Mapped[datetime] = mapped_column(
-        DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow
-    )
-
-
 class TeamNote(Base):
-    """A free-text scouting note about a team at an event. Shared by everyone at that
-    event (keyed by event + team, not by workspace); last write wins."""
+    """A free-text note about a team at an event. Shared by everyone at that event (keyed
+    by event + team, not by workspace); last write wins."""
     __tablename__ = "team_notes"
     __table_args__ = (UniqueConstraint("event_key", "team", name="uq_team_note"),)
     id: Mapped[int] = mapped_column(Integer, primary_key=True)

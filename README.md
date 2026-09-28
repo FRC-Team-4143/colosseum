@@ -4,15 +4,15 @@ The event data and match-planning hub for **FRC Teams 4143 and 4423 (MARS/WARS)*
 
 Pick a competition and Colosseum pulls the schedule, every team's stats (rankings,
 OPR/DPR/CCWM, component OPRs, optional Statbotics EPA) and live match results from The
-Blue Alliance. On top of that: a shared pick list, a shared manual scouting form, and the
-per-match strategy whiteboard (auto / teleop / transition / endgame / notes, robot tokens,
-freehand, checkboxes) with PNG / PDF / QR export.
+Blue Alliance. On top of that: a shared pick list and the per-match strategy whiteboard
+(auto / teleop / transition / endgame / notes, robot tokens, freehand, checkboxes) with
+PNG / PDF / QR export.
 
 It's a SvelteKit single-page app served by a FastAPI backend, deployed as one container
 behind Nginx Proxy Manager alongside the sibling apps (Legion, Tempus, Munus, Merces,
 Virtus). Sign-in is **Legion SSO**: the signed-in member's `team_number` picks their
 workspace (4143 or 4423), and the two workspaces keep separate events, pick lists and
-whiteboards while sharing TBA data, scouting records and team notes for a given event.
+whiteboards while sharing TBA data and team notes for a given event.
 
 Whiteboard adapted from the open-source
 [Strategy Board](https://github.com/pranavgundu/Strategy-Board) by Pranav Gundu, used
@@ -23,11 +23,11 @@ under the MIT License. See `THIRD_PARTY_NOTICES`.
 ```
 src/            SvelteKit SPA (Svelte 5, adapter-static)
   lib/api/      typed clients for the /api/* backend
-  lib/stores/   identity, event, picklist, scouting, app (whiteboards)
+  lib/stores/   identity, event, picklist, app (whiteboards)
   lib/whiteboard/  the framework-agnostic canvas engine (unchanged from Strategy Board)
 server/         FastAPI backend (async SQLAlchemy + aiosqlite + APScheduler)
   app/services/ sso (verify mw_sso), tba + statbotics (proxy + cache), legion_sync
-  app/routers/  auth, tba, workspace event, picklist, scouting, notes, whiteboards
+  app/routers/  auth, tba, workspace event, picklist, notes, whiteboards
 Dockerfile      node build stage -> python:3.11-slim serving the SPA + /api
 ```
 

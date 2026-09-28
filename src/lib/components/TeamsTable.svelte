@@ -1,7 +1,6 @@
 <script lang="ts">
   import { app } from "$lib/stores/app.svelte";
   import { eventStore } from "$lib/stores/event.svelte";
-  import { scouting } from "$lib/stores/scouting.svelte";
   import { buildTeamStats, sortRows, type SortKey } from "$lib/features/tba-stats";
 
   let { onAddToPicklist }: { onAddToPicklist: (team: number) => void } = $props();
@@ -34,12 +33,6 @@
   );
 
   const loading = $derived(eventStore.teams.loading || eventStore.rankings.loading || eventStore.oprs.loading);
-
-  const scoutedCount = $derived(() => {
-    const counts = new Map<number, number>();
-    for (const entry of scouting.entries) counts.set(entry.team, (counts.get(entry.team) ?? 0) + 1);
-    return counts;
-  });
 
   function sortBy(key: SortKey, defaultDir: "asc" | "desc" = "desc") {
     if (sortKey === key) sortDir = sortDir === "asc" ? "desc" : "asc";
@@ -81,7 +74,6 @@
               <th class="num" onclick={() => sortBy("dpr")}>DPR{arrow("dpr")}</th>
               <th class="num" onclick={() => sortBy("ccwm")}>CCWM{arrow("ccwm")}</th>
               {#if hasEpa}<th class="num" title="Statbotics EPA" onclick={() => sortBy("epa")}>EPA{arrow("epa")}</th>{/if}
-              <th class="num" title="Manual scouting records">Scouted</th>
               {#each componentColumns as name (name)}
                 <th class="num" onclick={() => sortBy(`component:${name}`)}>{name}{arrow(`component:${name}`)}</th>
               {/each}
@@ -100,7 +92,6 @@
                 <td class="num">{fixed(row.dpr)}</td>
                 <td class="num">{fixed(row.ccwm)}</td>
                 {#if hasEpa}<td class="num">{fixed(row.epa)}</td>{/if}
-                <td class="num">{scoutedCount().get(row.team) ?? 0}</td>
                 {#each componentColumns as name (name)}
                   <td class="num">{fixed(row.components[name] ?? null)}</td>
                 {/each}

@@ -1,4 +1,4 @@
-"""Free-text scouting notes about a team at an event. Shared across both workspaces —
+"""Free-text notes about a team at an event. Shared across both workspaces —
 keyed by (event, team), not by team_number — so 4143 and 4423 at the same event see the
 same notes. Last write wins."""
 from fastapi import APIRouter, Depends
